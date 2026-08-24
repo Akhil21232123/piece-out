@@ -1,0 +1,166 @@
+@import "tailwindcss";
+
+:root {
+  --background: #efe8dc;
+  --foreground: #171411;
+  --accent: #f5c400;
+  --hot: #e31b23;
+  --ink: #171411;
+  --muted: #7a7268;
+  --paper: #efe8dc;
+  --line: rgb(23 20 17 / 0.12);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-display);
+  --font-hand: var(--font-caveat);
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+html,
+body {
+  background: var(--paper);
+  color: var(--foreground);
+  width: 100%;
+  max-width: 100%;
+  overflow-x: clip;
+  overscroll-behavior-x: none;
+  touch-action: manipulation;
+}
+
+body {
+  font-family: var(--font-display), Helvetica Neue, sans-serif;
+}
+
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+}
+
+.puzzle-paper {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background-color: #efe8dc;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'><rect width='120' height='120' fill='%23efe8dc'/><g fill-opacity='0.12'><path fill='%23f5c400' d='M18 6h8c0 5.5 8 5.5 8 0h8v8c5.5 0 5.5 8 0 8v8H34c0-5.5-8-5.5-8 0H18V22c-5.5 0-5.5-8 0-8V6Z'/><path fill='%23e31b23' transform='translate(60 0)' d='M18 6h8c0 5.5 8 5.5 8 0h8v8c5.5 0 5.5 8 0 8v8H34c0-5.5-8-5.5-8 0H18V22c-5.5 0-5.5-8 0-8V6Z'/><path fill='%231d4ed8' transform='translate(0 60)' d='M18 6h8c0 5.5 8 5.5 8 0h8v8c5.5 0 5.5 8 0 8v8H34c0-5.5-8-5.5-8 0H18V22c-5.5 0-5.5-8 0-8V6Z'/><path fill='%239b2242' transform='translate(60 60)' d='M18 6h8c0 5.5 8 5.5 8 0h8v8c5.5 0 5.5 8 0 8v8H34c0-5.5-8-5.5-8 0H18V22c-5.5 0-5.5-8 0-8V6Z'/></g></svg>");
+  background-size: 96px 96px;
+}
+
+.type-on-field {
+  text-shadow:
+    0 0 16px #efe8dc,
+    0 1px 0 #efe8dc;
+}
+
+.content-on-puzzle {
+  background: linear-gradient(
+    180deg,
+    rgb(239 232 220 / 0.82) 0%,
+    rgb(239 232 220 / 0.58) 22%,
+    rgb(239 232 220 / 0.48) 55%,
+    rgb(239 232 220 / 0.78) 100%
+  );
+}
+
+.puzzle-field {
+  max-width: none;
+}
+
+.site-grain {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  opacity: 0.045;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+.checkout-input {
+  width: 100%;
+  border: 1px solid rgb(23 20 17 / 0.16);
+  background: #fffaf3;
+  padding: 0.75rem 0.9rem;
+  color: #171411;
+  font-size: 0.95rem;
+  outline: none;
+  border-radius: 0.9rem;
+}
+
+.checkout-input:focus {
+  border-color: #e31b23;
+}
+
+::selection {
+  background: #f5c400;
+  color: #171411;
+}
+
+@keyframes marquee {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 28s linear infinite;
+}
+
+.pz-bit {
+  will-change: transform;
+}
+
+.how-step {
+  animation: how-bob 5.2s ease-in-out infinite;
+  will-change: transform;
+}
+
+.how-step:nth-child(2) {
+  animation-delay: 0.35s;
+}
+
+.how-step:nth-child(3) {
+  animation-delay: 0.7s;
+}
+
+.how-step:nth-child(4) {
+  animation-delay: 1.05s;
+}
+
+@keyframes how-bob {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -5px, 0);
+  }
+}
+
+.product-shot {
+  display: block;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee,
+  .how-step {
+    animation: none;
+  }
+
+  .play-piece,
+  .pz-bit,
+  .how-step {
+    will-change: auto;
+  }
+}

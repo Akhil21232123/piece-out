@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 120" fill="none" role="img">
+  <title>Piece Out</title>
+  <text x="8" y="78" fill="currentColor" font-family="Syne, ui-sans-serif, system-ui, sans-serif" font-size="56" font-weight="800" letter-spacing="4">PIECE</text>
+  <g transform="translate(286 28)">
+    <path fill="#E11D2E" d="M10 8h12c0-8 12-8 12 0h12v12c8 0 8 12 0 12v12H34c0-8-12-8-12 0H10V32c8 0 8-12 0-12V8Z"/>
+  </g>
+  <text x="408" y="78" fill="currentColor" font-family="Syne, ui-sans-serif, system-ui, sans-serif" font-size="56" font-weight="800" letter-spacing="4">OUT</text>
+</svg>
