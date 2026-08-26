@@ -5,6 +5,7 @@ export type Product = {
   image: string;
   width: number;
   height: number;
+  livePuzzle?: boolean;
 };
 
 export const PRODUCTS: Product[] = [
@@ -71,6 +72,7 @@ export const PRODUCTS: Product[] = [
     image: "/products/diet-coke.jpg",
     width: 1024,
     height: 990,
+    livePuzzle: false,
   },
   {
     id: "po-02",
@@ -141,6 +143,6 @@ export const PRODUCTS: Product[] = [
 export const HOW_IT_WORKS = [
   { id: "open", n: "01", title: "peel", note: "pop the lid. no box energy." },
   { id: "build", n: "02", title: "snap", note: "frame clicks. done." },
-  { id: "puzzle", n: "03", title: "lock in", note: "150 pieces. one hour." },
+  { id: "puzzle", n: "03", title: "lock in", note: "120 pieces. one hour." },
   { id: "display", n: "04", title: "flex", note: "hang it. or don't." },
 ] as const;

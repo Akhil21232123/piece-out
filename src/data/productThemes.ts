@@ -27,8 +27,8 @@ export const PRODUCT_THEMES: Record<string, ProductTheme> = {
     pieces: ["#7a1f32", "#d45d7a", "#f2b3c4", "#3d4f32", "#c4a574"],
   },
   "po-13": {
-    paper: "#0f1c4a",
-    stroke: "rgba(255,255,255,0.16)",
+    paper: "#efe8dc",
+    stroke: "rgba(23,20,17,0.12)",
     pieces: ["#1d4ed8", "#f5c400", "#e31b23", "#f8f8f8", "#111111"],
   },
   "po-14": {
@@ -67,14 +67,14 @@ export const PRODUCT_THEMES: Record<string, ProductTheme> = {
     pieces: ["#d4a017", "#6b8f71", "#e8d5a3", "#fffaf3", "#5c4a32"],
   },
   "po-05": {
-    paper: "#12182a",
-    stroke: "rgba(212,184,74,0.22)",
+    paper: "#efe8dc",
+    stroke: "rgba(23,20,17,0.12)",
     pieces: ["#1a3a6b", "#d4b84a", "#243018", "#8aa4d4", "#0d1118"],
   },
   "po-06": {
-    paper: "#161616",
-    stroke: "rgba(255,255,255,0.14)",
-    pieces: ["#e31b23", "#f5c400", "#f8f8f8", "#1d4ed8", "#111111"],
+    paper: "#efe8dc",
+    stroke: "rgba(23,20,17,0.16)",
+    pieces: ["#e31b23", "#f5c400", "#f8f8f8", "#1d4ed8", "#171411"],
   },
   "po-07": {
     paper: "#efe8dc",

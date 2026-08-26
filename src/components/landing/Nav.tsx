@@ -11,7 +11,7 @@ export function Nav({ onCheckout }: { onCheckout: () => void }) {
   };
 
   return (
-    <header className="fixed inset-x-0 top-0 z-40 overflow-visible border-b border-[#171411]/8 bg-[#efe8dc]/80 backdrop-blur-md">
+    <header className="fixed inset-x-0 top-0 z-40 overflow-visible border-b border-[#171411]/8 bg-[#efe8dc]">
       <div className="mx-auto flex max-w-[1400px] items-center justify-between px-4 py-3 md:px-8">
         <a href="#top" className="text-sm font-extrabold tracking-tight text-[#171411]">
           piece<span className="text-[#e31b23]">/</span>out

@@ -4,10 +4,13 @@ import { useRef } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { edgesFor, jigPath } from "@/lib/jigsaw";
+import { onScrollPulse } from "@/lib/scrollPulse";
 
 gsap.registerPlugin(useGSAP);
+gsap.ticker.lagSmoothing(500, 16);
 
 const FILLS = ["#f5c400", "#e31b23", "#1d4ed8", "#9b2242", "#fffaf3", "#efe8dc"];
+const PAPER = "#efe8dc";
 
 type Cell = {
   homeX: number;
@@ -20,50 +23,102 @@ type Cell = {
 };
 
 export function PuzzleField() {
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const shiftRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useGSAP(
     (_context, contextSafe) => {
+      const wrap = wrapRef.current;
+      const shift = shiftRef.current;
       const canvas = canvasRef.current;
-      if (!canvas) return;
-      const ctx = canvas.getContext("2d", { alpha: true, desynchronized: true });
+      if (!wrap || !shift || !canvas) return;
+      const ctx = canvas.getContext("2d", { alpha: false, desynchronized: true });
       if (!ctx) return;
 
       const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const live =
+        !reduced &&
+        window.matchMedia("(pointer: fine)").matches &&
+        window.matchMedia("(hover: hover)").matches;
+      const board = document.createElement("canvas");
+      const boardCtx = board.getContext("2d", { alpha: false })!;
       let cells: Cell[] = [];
       let dpr = 1;
       let width = 0;
       let height = 0;
-      let moving = false;
-      let lastScroll = window.scrollY;
+      let size = 20;
+      let scrolling = false;
       let aimX = -9999;
       let aimY = -9999;
       let cx = 0;
       let cy = 0;
       let energy = 0;
       let resizeAt = 0;
-      let size = 22;
+      let ticking = false;
 
-      const skipTarget = (target: EventTarget | null) => {
-        const node = target as Node | null;
-        const el = node instanceof Element ? node : node?.parentElement;
-        return Boolean(
-          el?.closest("input, textarea, select, a[href^='upi'], [role='dialog'], [data-product-puzzle]"),
-        );
+      gsap.set(shift, { force3D: true });
+      const yTo = gsap.quickTo(shift, "y", { duration: live ? 0.5 : 0.72, ease: "power3.out" });
+
+      const paintCell = (
+        g: CanvasRenderingContext2D,
+        cell: Cell,
+        ox: number,
+        oy: number,
+        rot: number,
+      ) => {
+        g.save();
+        g.translate(cell.x + ox, cell.y + oy);
+        g.rotate(rot);
+        g.globalAlpha = cell.fill === "#efe8dc" ? 0.07 : 0.12;
+        g.fillStyle = cell.fill;
+        g.fill(cell.path);
+        g.globalAlpha = 0.2;
+        g.strokeStyle = "#171411";
+        g.lineWidth = 0.8;
+        g.lineJoin = "round";
+        g.lineCap = "round";
+        g.stroke(cell.path);
+        g.restore();
+      };
+
+      const blit = () => {
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.drawImage(board, 0, 0);
+      };
+
+      const parallax = () => {
+        if (reduced) return;
+        const vh = window.innerHeight;
+        const max = vh * (live ? 0.055 : 0.1);
+        const factor = live ? -0.028 : -0.055;
+        yTo(Math.max(-max, Math.min(max, window.scrollY * factor)));
       };
 
       const layout = () => {
-        const w = window.innerWidth;
-        const h = window.innerHeight;
-        dpr = Math.min(1.75, window.devicePixelRatio || 1);
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        const w = Math.ceil(vw * 1.14);
+        const h = Math.ceil(vh * 1.32);
+        dpr = Math.min(2, window.devicePixelRatio || 1);
         width = w;
         height = h;
+        shift.style.width = `${w}px`;
+        shift.style.height = `${h}px`;
+        shift.style.left = `${(vw - w) / 2}px`;
+        shift.style.top = `${(vh - h) / 2}px`;
         canvas.width = Math.floor(w * dpr);
         canvas.height = Math.floor(h * dpr);
         canvas.style.width = `${w}px`;
         canvas.style.height = `${h}px`;
+        board.width = canvas.width;
+        board.height = canvas.height;
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
+        boardCtx.imageSmoothingEnabled = true;
+        boardCtx.imageSmoothingQuality = "high";
 
-        size = w < 640 ? 20 : 22;
+        size = w < 640 ? 18 : 20;
         let cols = Math.ceil(w / size) + 2;
         let rows = Math.ceil(h / size) + 2;
         while (cols * rows > 900) {
@@ -75,11 +130,14 @@ export function PuzzleField() {
         const ox = (w - (cols - 1) * size) / 2;
         const oy = (h - (rows - 1) * size) / 2;
         const next: Cell[] = [];
+        boardCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        boardCtx.fillStyle = PAPER;
+        boardCtx.fillRect(0, 0, w, h);
         for (let r = 0; r < rows; r++) {
           for (let c = 0; c < cols; c++) {
             const homeX = ox + c * size;
             const homeY = oy + r * size;
-            next.push({
+            const cell: Cell = {
               homeX,
               homeY,
               x: homeX,
@@ -87,39 +145,49 @@ export function PuzzleField() {
               rot: 0,
               fill: FILLS[(c * 3 + r * 5) % FILLS.length],
               path: jigPath(size, edgesFor(c, r, cols, rows)),
-            });
+            };
+            next.push(cell);
+            paintCell(boardCtx, cell, 0, 0, 0);
           }
         }
         cells = next;
+        blit();
+        parallax();
       };
 
       const draw = () => {
-        if (resizeAt && performance.now() - resizeAt > 60) {
+        if (resizeAt && performance.now() - resizeAt > 50) {
           layout();
           resizeAt = 0;
         }
+        if (scrolling || document.hidden) {
+          blit();
+          return;
+        }
 
         const dt = Math.min(2, gsap.ticker.deltaRatio(60));
-        cx += (aimX - cx) * (1 - Math.pow(0.8, dt));
-        cy += (aimY - cy) * (1 - Math.pow(0.8, dt));
+        cx += (aimX - cx) * (1 - Math.pow(0.82, dt));
+        cy += (aimY - cy) * (1 - Math.pow(0.82, dt));
         energy *= Math.pow(0.91, dt);
 
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        ctx.clearRect(0, 0, width, height);
+        ctx.fillStyle = PAPER;
+        ctx.fillRect(0, 0, width, height);
 
-        const radius = 88;
+        const radius = 108;
         const r2 = radius * radius;
-        const lift = reduced ? 0 : 9 * energy;
-        const t = reduced ? 0 : performance.now() * 0.0007;
+        const lift = 12 * energy;
+        const t = performance.now() * 0.0007;
+        const ease = 1 - Math.pow(0.78, dt);
 
         for (let i = 0; i < cells.length; i++) {
           const cell = cells[i];
-          const idleX = reduced ? 0 : Math.sin(t + i * 0.37) * 0.45;
-          const idleY = reduced ? 0 : Math.cos(t * 0.9 + i * 0.29) * 0.45;
+          const idleX = Math.sin(t + i * 0.37) * 0.55;
+          const idleY = Math.cos(t * 0.9 + i * 0.29) * 0.55;
           let tx = cell.homeX;
           let ty = cell.homeY;
           let tr = 0;
-          if (!reduced && energy > 0.03) {
+          if (energy > 0.03) {
             const dx = cell.homeX - cx;
             const dy = cell.homeY - cy;
             const d2 = dx * dx + dy * dy;
@@ -128,96 +196,102 @@ export function PuzzleField() {
               const fall = (1 - d / radius) ** 2;
               tx += (dx / d) * fall * lift;
               ty += (dy / d) * fall * lift;
-              tr = fall * 0.12 * (dx > 0 ? 1 : -1);
+              tr = fall * 0.14 * (dx > 0 ? 1 : -1);
             }
           }
-          cell.x += (tx - cell.x) * (1 - Math.pow(0.74, dt));
-          cell.rot += (tr - cell.rot) * (1 - Math.pow(0.74, dt));
-          cell.y += (ty - cell.y) * (1 - Math.pow(0.74, dt));
-
-          ctx.save();
-          ctx.translate(cell.x + idleX, cell.y + idleY);
-          ctx.rotate(cell.rot);
-          ctx.globalAlpha = cell.fill === "#efe8dc" ? 0.06 : 0.1;
-          ctx.fillStyle = cell.fill;
-          ctx.fill(cell.path);
-          ctx.globalAlpha = 0.12;
-          ctx.strokeStyle = "#171411";
-          ctx.lineWidth = 0.6;
-          ctx.stroke(cell.path);
-          ctx.restore();
+          cell.x += (tx - cell.x) * ease;
+          cell.y += (ty - cell.y) * ease;
+          cell.rot += (tr - cell.rot) * ease;
+          paintCell(ctx, cell, idleX, idleY, cell.rot);
         }
+        ctx.globalAlpha = 1;
+      };
+
+      const kick = () => {
+        if (!live || ticking) return;
+        ticking = true;
+        gsap.ticker.add(draw);
       };
 
       layout();
-      draw();
-
-      if (reduced) {
-        const onResize = () => {
-          layout();
-          draw();
-        };
-        window.addEventListener("resize", onResize);
-        return () => window.removeEventListener("resize", onResize);
-      }
-
-      const safe = contextSafe ?? ((fn: (e: PointerEvent) => void) => fn);
-
-      const onMove = safe((e: PointerEvent) => {
-        if (skipTarget(e.target)) return;
-        const touch = e.pointerType === "touch";
-        if (touch && e.buttons === 0 && !moving) return;
-        const scrolled = Math.abs(window.scrollY - lastScroll) > 2;
-        lastScroll = window.scrollY;
-        if (touch && scrolled) return;
-        aimX = e.clientX;
-        aimY = e.clientY;
-        energy = Math.min(1.1, energy + 0.2);
-      });
-
-      const onDown = safe((e: PointerEvent) => {
-        if (e.button !== 0) return;
-        if (skipTarget(e.target)) return;
-        moving = e.pointerType === "touch" || e.pointerType === "pen";
-        lastScroll = window.scrollY;
-        aimX = e.clientX;
-        aimY = e.clientY;
-        energy = 1.2;
-      });
-
-      const onUp = () => {
-        moving = false;
-      };
 
       const onResize = () => {
         resizeAt = performance.now();
+        if (live) kick();
+        else layout();
       };
 
-      gsap.ticker.add(draw);
+      const stopPulse = onScrollPulse((pulse) => {
+        parallax();
+        if (!live) return;
+        if (!pulse.settling) {
+          scrolling = true;
+          blit();
+          return;
+        }
+        scrolling = false;
+        kick();
+      });
+
+      if (!live) {
+        window.addEventListener("resize", onResize);
+        window.visualViewport?.addEventListener("resize", onResize);
+        return () => {
+          stopPulse();
+          window.removeEventListener("resize", onResize);
+          window.visualViewport?.removeEventListener("resize", onResize);
+        };
+      }
+
+      kick();
+      const safe = contextSafe ?? ((fn: (e: PointerEvent) => void) => fn);
+
+      const onMove = safe((e: PointerEvent) => {
+        if (e.pointerType !== "mouse" || scrolling) return;
+        aimX = e.clientX - shift.getBoundingClientRect().left;
+        aimY = e.clientY - shift.getBoundingClientRect().top;
+        energy = Math.min(1.2, energy + 0.22);
+      });
+
+      const onDown = safe((e: PointerEvent) => {
+        if (e.button !== 0 || e.pointerType !== "mouse") return;
+        aimX = e.clientX - shift.getBoundingClientRect().left;
+        aimY = e.clientY - shift.getBoundingClientRect().top;
+        energy = 1.25;
+      });
+
+      const onVis = () => {
+        if (document.hidden) blit();
+        else kick();
+      };
+
       window.addEventListener("pointermove", onMove, { passive: true });
       window.addEventListener("pointerdown", onDown, { passive: true });
-      window.addEventListener("pointerup", onUp, { passive: true });
-      window.addEventListener("pointercancel", onUp, { passive: true });
       window.addEventListener("resize", onResize);
       window.visualViewport?.addEventListener("resize", onResize);
+      document.addEventListener("visibilitychange", onVis);
       return () => {
+        stopPulse();
         gsap.ticker.remove(draw);
         window.removeEventListener("pointermove", onMove);
         window.removeEventListener("pointerdown", onDown);
-        window.removeEventListener("pointerup", onUp);
-        window.removeEventListener("pointercancel", onUp);
         window.removeEventListener("resize", onResize);
         window.visualViewport?.removeEventListener("resize", onResize);
+        document.removeEventListener("visibilitychange", onVis);
       };
     },
-    { scope: canvasRef },
+    { scope: wrapRef },
   );
 
   return (
-    <canvas
-      ref={canvasRef}
-      className="puzzle-field pointer-events-none fixed inset-0 z-[1]"
+    <div
+      ref={wrapRef}
+      className="puzzle-field-wrap pointer-events-none fixed inset-0 z-[1] overflow-hidden bg-[#efe8dc]"
       aria-hidden
-    />
+    >
+      <div ref={shiftRef} className="puzzle-field-shift">
+        <canvas ref={canvasRef} className="puzzle-field bg-[#efe8dc]" />
+      </div>
+    </div>
   );
 }

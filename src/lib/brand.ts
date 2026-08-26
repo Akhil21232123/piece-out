@@ -4,9 +4,10 @@ export const BRAND = {
   vpa: "7981590780@fam",
   payeeName: "piece/out",
   whatsapp: "917981590780",
-  priceBare: 500,
-  priceFrame: 600,
+  priceBare: 599,
+  priceFrame: 699,
   currency: "INR",
+  pieces: 120,
 } as const;
 
 export const COLOR = {

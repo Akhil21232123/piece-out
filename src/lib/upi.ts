@@ -24,7 +24,3 @@ export function upiAppLinks(amount: number, orderId: string) {
     paytm: `paytmmp://pay?${q}`,
   };
 }
-
-export function whatsappOrderUrl(message: string): string {
-  return `https://wa.me/${BRAND.whatsapp}?text=${encodeURIComponent(message)}`;
-}

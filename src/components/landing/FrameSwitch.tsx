@@ -15,7 +15,7 @@ export function FrameSwitch({
       <button
         type="button"
         role="switch"
-        aria-checked={withFrame}
+        aria-checked={withFrame ? "true" : "false"}
         aria-label="Toggle frame"
         onClick={() => onChange(!withFrame)}
         className={`relative h-7 w-12 shrink-0 rounded-full border border-[#171411]/15 transition-colors ${

@@ -9,7 +9,6 @@ import { CheckoutModal } from "@/components/landing/CheckoutModal";
 import { CartBar } from "@/components/landing/CartBar";
 import { Footer, Marquee } from "@/components/landing/Chrome";
 import { PuzzleField } from "@/components/landing/PuzzleField";
-import { PuzzlePlay } from "@/components/landing/PuzzlePlay";
 import { FitPhone } from "@/components/landing/FitPhone";
 import { cartCount, useCartStore } from "@/store/cartStore";
 
@@ -22,12 +21,9 @@ export default function Home() {
   }, []);
 
   return (
-    <main className={`relative min-h-dvh overflow-x-clip bg-transparent text-[#171411] ${count > 0 ? "pb-36" : ""}`}>
+    <main className={`relative min-h-dvh overflow-x-hidden bg-transparent text-[#171411] ${count > 0 ? "pb-36" : ""}`}>
       <FitPhone />
-      <div className="puzzle-paper" aria-hidden />
       <PuzzleField />
-      <div className="site-grain" aria-hidden />
-      <PuzzlePlay />
       <div className="relative z-10">
         <Nav onCheckout={openCheckout} />
         <Hero />

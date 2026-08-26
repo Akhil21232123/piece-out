@@ -18,15 +18,13 @@ const caveat = Caveat({
 
 export const metadata: Metadata = {
   title: "piece/out — puzzles you can pop open",
-  description: "Puzzles you can pop open. One hour off the algorithm. ₹500 / ₹600 framed.",
+  description: "Puzzles you can pop open. One hour off the algorithm. ₹599 / ₹699 framed.",
   icons: { icon: "/favicon.svg" },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
   viewportFit: "cover",
   themeColor: "#efe8dc",
 };
@@ -35,9 +33,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${outfit.variable} ${caveat.variable} h-full antialiased`}
+      className={`${outfit.variable} ${caveat.variable} antialiased`}
     >
-      <body className="min-h-full bg-[#efe8dc] text-[#171411]">{children}</body>
+      <body className="bg-[#efe8dc] text-[#171411]">{children}</body>
     </html>
   );
 }

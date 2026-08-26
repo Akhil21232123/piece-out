@@ -5,7 +5,7 @@ import { useShopStore } from "@/store/shopStore";
 import { useScrollStore } from "@/store/scrollStore";
 import { getPuzzle } from "@/data/puzzles";
 import { BRAND, formatInr, priceFor } from "@/lib/brand";
-import { buildUpiUri, upiAppLinks, whatsappOrderUrl } from "@/lib/upi";
+import { buildUpiUri, upiAppLinks } from "@/lib/upi";
 import { FrameToggle } from "./FrameToggle";
 import { getLenis } from "@/hooks/useLenisScroll";
 
@@ -101,20 +101,6 @@ export function CheckoutSheet() {
   const field =
     (key: keyof Details) => (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setDetails((d) => ({ ...d, [key]: e.target.value }));
-
-  const waMessage = [
-    `piece/out order ${orderId ?? ""}`,
-    `${puzzle.name} ${puzzle.subtitle}`,
-    withFrame ? "With frame · ₹600" : "No frame · ₹500",
-    details.name,
-    details.phone,
-    details.email,
-    details.address,
-    details.pincode,
-    details.utr ? `UTR ${details.utr}` : "UTR pending",
-  ]
-    .filter(Boolean)
-    .join("\n");
 
   return (
     <div
@@ -254,17 +240,8 @@ export function CheckoutSheet() {
               className="checkout-input mt-4"
             />
 
-            <a
-              href={whatsappOrderUrl(waMessage)}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-4 flex w-full items-center justify-center rounded-full bg-[#111111] px-6 py-3.5 text-sm font-semibold text-white hover:bg-[#E31B23]"
-            >
-              Paid? Send order on WhatsApp
-            </a>
             <p className="mt-3 text-center text-[12px] leading-relaxed text-[#8a6a72]">
-              UPI opens GPay / PhonePe / Paytm and pays {BRAND.vpa}. We match the amount and
-              WhatsApp the shipping details. Personal UPI cannot auto-confirm.
+              UPI opens GPay / PhonePe / Paytm and pays {BRAND.vpa}.
             </p>
           </div>
         )}

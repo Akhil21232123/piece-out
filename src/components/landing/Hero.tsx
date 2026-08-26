@@ -1,10 +1,43 @@
 "use client";
 
+import { useRef } from "react";
 import Image from "next/image";
-import { ProductPuzzle } from "./ProductPuzzle";
-import { PRODUCTS } from "@/data/products";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { BRAND, formatInr } from "@/lib/brand";
+
+gsap.registerPlugin(useGSAP, ScrollTrigger);
 
 export function Hero() {
+  const shotRef = useRef<HTMLDivElement>(null);
+
+  useGSAP(
+    () => {
+      const el = shotRef.current;
+      if (!el) return;
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      const coarse =
+        window.matchMedia("(pointer: coarse)").matches || window.innerWidth < 720;
+      gsap.fromTo(
+        el,
+        { y: 0, scale: 1 },
+        {
+          y: coarse ? 36 : 20,
+          scale: coarse ? 0.95 : 0.975,
+          ease: "none",
+          scrollTrigger: {
+            trigger: el,
+            start: "top 30%",
+            end: "bottom top",
+            scrub: 0.5,
+          },
+        },
+      );
+    },
+    { scope: shotRef },
+  );
+
   const goShop = () => {
     document.getElementById("shop")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
@@ -23,7 +56,7 @@ export function Hero() {
             one hour off the algorithm.
           </p>
           <p className="type-on-field mt-4 max-w-sm text-base leading-snug text-[#5e574e]">
-            puzzles in a can. 150 pieces. peel, snap, hang. pick a mood and add it to cart.
+            puzzles in a can. {BRAND.pieces} pieces. peel, snap, hang. pick a mood and add it to cart.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-4">
             <button
@@ -33,16 +66,21 @@ export function Hero() {
             >
               Shop the drop
             </button>
-            <p className="text-sm text-[#5e574e]">₹500 · ₹600 framed</p>
+            <p className="text-sm text-[#5e574e]">
+              {formatInr(BRAND.priceBare)} · {formatInr(BRAND.priceFrame)} framed
+            </p>
           </div>
         </div>
 
-        <div className="relative min-w-0 overflow-hidden bg-[#efe8dc] sm:rounded-[1.4rem]">
+        <div
+          ref={shotRef}
+          className="hero-shot relative min-w-0 overflow-hidden bg-[#efe8dc] sm:rounded-[1.4rem]"
+        >
           <Image
-            src="/products/caprese-break.jpg"
-            alt="piece/out caprese break puzzle can and frame"
+            src="/products/diet-coke.jpg"
+            alt="piece/out diet coke: peel the can, snap the frame, lock in 120 pieces, hang or stand"
             width={1024}
-            height={991}
+            height={990}
             preload
             loading="eager"
             fetchPriority="high"
@@ -50,7 +88,6 @@ export function Hero() {
             sizes="(max-width: 1024px) 100vw, 58vw"
             className="h-auto w-full max-w-full"
           />
-          <ProductPuzzle product={PRODUCTS[0]} />
         </div>
       </div>
     </section>

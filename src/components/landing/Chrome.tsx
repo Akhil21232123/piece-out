@@ -1,6 +1,6 @@
 
 export function Marquee() {
-  const line = "pop it  ·  lock in  ·  150 pieces  ·  1 hour  ·  hang it  ·  ";
+  const line = "pop it  ·  lock in  ·  120 pieces  ·  1 hour  ·  hang it  ·  ";
   return (
     <div className="overflow-hidden border-y border-[#171411]/10 bg-[#f5c400] py-3 text-[#171411]" suppressHydrationWarning>
       <div className="flex w-max animate-marquee">

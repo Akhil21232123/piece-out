@@ -21,8 +21,8 @@ export function edgesFor(col: number, row: number, cols: number, rows: number): 
 
 export function jigPath(size: number, edges: PieceEdges): Path2D {
   const path = new Path2D();
-  const tab = size * 0.2;
-  const neck = size * 0.13;
+  const tab = size * 0.265;
+  const neck = size * 0.16;
   path.moveTo(0, 0);
   bump(path, 0, 0, size, 0, edges.n, tab, neck);
   bump(path, size, 0, size, size, edges.e, tab, neck);

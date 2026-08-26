@@ -14,8 +14,8 @@ export const PUZZLES: readonly Puzzle[] = [
     name: "diet coke",
     subtitle: "pop art edition",
     slug: "diet-coke-pop-art",
-    blurb: "150 pieces. one hour. hang it or stand it.",
-    pieceCount: 150,
+    blurb: "120 pieces. one hour. hang it or stand it.",
+    pieceCount: 120,
     art: "/puzzles/diet-coke-pop-art.jpg",
   },
 ] as const;
