@@ -67,7 +67,7 @@ export function ProductPuzzle({ product }: { product: Product }) {
       const ctx = canvas.getContext("2d", { alpha: true, desynchronized: true });
       if (!ctx) return;
 
-      const host = wrap.closest(".puzzle-host") ?? wrap.parentElement;
+      const host = (wrap.closest(".puzzle-host") ?? wrap.parentElement) as HTMLElement | null;
       const paper = "#efe8dc";
       const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       const mousey =
@@ -596,9 +596,9 @@ export function ProductPuzzle({ product }: { product: Product }) {
 
       window.addEventListener("pointermove", onMove, { passive: true });
       window.addEventListener("pointerdown", onDown, { passive: true });
-      host?.addEventListener("pointerdown", onHostDown, { passive: true });
-      host?.addEventListener("pointerup", onHostUp, { passive: true });
-      host?.addEventListener("pointercancel", onHostUp, { passive: true });
+      host?.addEventListener("pointerdown", onHostDown as EventListener, { passive: true });
+      host?.addEventListener("pointerup", onHostUp as EventListener, { passive: true });
+      host?.addEventListener("pointercancel", onHostUp as EventListener, { passive: true });
 
       if (!mousey && !reduced) {
         breathTimer = window.setInterval(() => {
@@ -625,9 +625,9 @@ export function ProductPuzzle({ product }: { product: Product }) {
         gsap.ticker.remove(tick);
         window.removeEventListener("pointermove", onMove);
         window.removeEventListener("pointerdown", onDown);
-        host?.removeEventListener("pointerdown", onHostDown);
-        host?.removeEventListener("pointerup", onHostUp);
-        host?.removeEventListener("pointercancel", onHostUp);
+        host?.removeEventListener("pointerdown", onHostDown as EventListener);
+        host?.removeEventListener("pointerup", onHostUp as EventListener);
+        host?.removeEventListener("pointercancel", onHostUp as EventListener);
       };
     },
     { scope: wrapRef, dependencies: [product.id, product.image], revertOnUpdate: true },
