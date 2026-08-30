@@ -17,6 +17,7 @@ const caveat = Caveat({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://pieceout.shop"),
   title: "piece/out — puzzles you can pop open",
   description: "Puzzles you can pop open. One hour off the algorithm. ₹599 / ₹699 framed.",
   icons: { icon: "/favicon.svg" },

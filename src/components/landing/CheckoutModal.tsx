@@ -6,42 +6,15 @@ import { AnimatePresence, motion } from "framer-motion";
 import { QRCodeSVG } from "qrcode.react";
 import confetti from "canvas-confetti";
 import { BRAND, formatInr } from "@/lib/brand";
-import { buildUpiPayUri, openUpiApp, type UpiApp } from "@/lib/checkout";
+import { buildUpiPayUri } from "@/lib/checkout";
 import { cartTotal, useCartStore } from "@/store/cartStore";
 
 const COLORS = ["#f5c400", "#e31b23", "#efe8dc", "#171411"];
 
-type PayState = "form" | "paying" | "paid" | "failed";
-
-declare global {
-  interface Window {
-    Razorpay?: new (options: Record<string, unknown>) => {
-      open: () => void;
-      on: (event: string, handler: (response: { error?: { description?: string } }) => void) => void;
-    };
-  }
-}
+type PayState = "form" | "placed";
 
 function fireConfetti() {
   confetti({ particleCount: 42, spread: 64, origin: { y: 0.7 }, colors: COLORS });
-}
-
-function loadRazorpay(): Promise<void> {
-  if (window.Razorpay) return Promise.resolve();
-  return new Promise((resolve, reject) => {
-    const existing = document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]');
-    if (existing) {
-      existing.addEventListener("load", () => resolve(), { once: true });
-      existing.addEventListener("error", () => reject(new Error("Could not load Razorpay")), { once: true });
-      return;
-    }
-    const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
-    script.async = true;
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error("Could not load Razorpay"));
-    document.body.appendChild(script);
-  });
 }
 
 export function CheckoutModal({
@@ -65,19 +38,19 @@ function CheckoutDialog({ onClose }: { onClose: () => void }) {
   const clear = useCartStore((state) => state.clear);
   const total = cartTotal(lines);
   const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
   const [error, setError] = useState("");
   const [state, setState] = useState<PayState>("form");
   const [orderId, setOrderId] = useState("");
   const [busy, setBusy] = useState(false);
-  const [paid, setPaid] = useState(0);
   const [copied, setCopied] = useState(false);
-  const [failReason, setFailReason] = useState("");
-  const [razorpay, setRazorpay] = useState(false);
-  const [keyId, setKeyId] = useState("");
-  const [rzpOrder, setRzpOrder] = useState("");
-  const upiUri = useMemo(() => buildUpiPayUri(total, orderId || "piece out puzzle"), [total, orderId]);
+  const [placedTotal, setPlacedTotal] = useState(0);
+  const upiUri = useMemo(
+    () => buildUpiPayUri(state === "placed" ? placedTotal : total, orderId || "piece out puzzle"),
+    [orderId, placedTotal, state, total],
+  );
 
   useEffect(() => {
     const prev = document.body.style.overflow;
@@ -93,70 +66,22 @@ function CheckoutDialog({ onClose }: { onClose: () => void }) {
   }, [onClose]);
 
   useEffect(() => {
-    fetch("/api/checkout/config")
-      .then((res) => res.json())
-      .then((data: { razorpay?: boolean; keyId?: string }) => {
-        setRazorpay(Boolean(data.razorpay));
-        setKeyId(data.keyId ?? "");
-      })
-      .catch(() => {
-        setRazorpay(false);
-      });
-  }, []);
-
-  useEffect(() => {
-    if (!orderId || state === "paid" || state === "failed") return;
-    let cancelled = false;
-    const tick = async () => {
-      try {
-        const res = await fetch(`/api/orders/${orderId}`, { cache: "no-store" });
-        const data = (await res.json()) as { status?: string; failureReason?: string };
-        if (cancelled) return;
-        if (data.status === "paid") {
-          fireConfetti();
-          setPaid(total);
-          setState("paid");
-          clear();
-        } else if (data.status === "failed") {
-          setFailReason(data.failureReason || "Payment failed");
-          setState("failed");
-        }
-      } catch {
-        /* keep waiting */
-      }
-    };
-    const id = window.setInterval(tick, 2000);
-    const onVis = () => {
-      if (document.visibilityState === "visible") void tick();
-    };
-    document.addEventListener("visibilitychange", onVis);
-    void tick();
-    return () => {
-      cancelled = true;
-      window.clearInterval(id);
-      document.removeEventListener("visibilitychange", onVis);
-    };
-  }, [clear, orderId, state, total]);
-
-  useEffect(() => {
-    if (state !== "paid" && state !== "failed" && lines.length === 0 && !orderId) onClose();
+    if (state !== "placed" && lines.length === 0 && !orderId) onClose();
   }, [lines.length, onClose, orderId, state]);
 
-  const markPaid = () => {
-    fireConfetti();
-    setPaid(total);
-    setState("paid");
-    clear();
-  };
-
-  const createOrder = async () => {
-    if (!name.trim() || !phone.trim() || !address.trim()) {
-      setError("Name, phone, and full address are required.");
-      return null;
+  const placeOrder = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!name.trim() || !email.trim() || !phone.trim() || !address.trim()) {
+      setError("Name, email, phone, and full address are required.");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      setError("Enter a valid email.");
+      return;
     }
     if (!/^\d{10}$/.test(phone.replace(/\s/g, ""))) {
       setError("Enter a 10-digit phone number.");
-      return null;
+      return;
     }
     setError("");
     setBusy(true);
@@ -166,6 +91,7 @@ function CheckoutDialog({ onClose }: { onClose: () => void }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: name.trim(),
+          email: email.trim().toLowerCase(),
           phone: phone.replace(/\s/g, ""),
           address: address.trim(),
           items: lines.map((line) => ({
@@ -175,97 +101,21 @@ function CheckoutDialog({ onClose }: { onClose: () => void }) {
           })),
         }),
       });
-      const data = (await res.json().catch(() => ({}))) as {
-        id?: string;
-        razorpay?: boolean;
-        razorpayOrderId?: string;
-        error?: string;
-      };
+      const data = (await res.json().catch(() => ({}))) as { id?: string; error?: string };
       if (!res.ok || !data.id) {
-        setError(data.error ?? "Could not start payment. Try again.");
-        return null;
+        setError(data.error ?? "Could not place the order. Try again.");
+        return;
       }
       setOrderId(data.id);
-      setRzpOrder(data.razorpayOrderId ?? "");
-      setState("paying");
-      return data;
+      setPlacedTotal(total);
+      fireConfetti();
+      setState("placed");
+      clear();
     } catch {
-      setError("Could not start payment. Try again.");
-      return null;
+      setError("Could not place the order. Try again.");
     } finally {
       setBusy(false);
     }
-  };
-
-  const payWithRazorpay = async (e: FormEvent) => {
-    e.preventDefault();
-    const created = orderId
-      ? { id: orderId, razorpay, razorpayOrderId: rzpOrder }
-      : await createOrder();
-    if (!created) return;
-    if (!razorpay || !keyId || !created.razorpayOrderId) {
-      setError("Payment sheet is not ready. Use GPay or PhonePe.");
-      return;
-    }
-
-    try {
-      await loadRazorpay();
-    } catch {
-      setError("Could not open the payment sheet. Use GPay or PhonePe below.");
-      return;
-    }
-
-    const checkout = new window.Razorpay!({
-      key: keyId,
-      amount: total * 100,
-      currency: "INR",
-      name: "piece/out",
-      description: created.id,
-      order_id: created.razorpayOrderId,
-      prefill: { name: name.trim(), contact: phone.replace(/\s/g, "") },
-      theme: { color: "#e31b23" },
-      method: { netbanking: true, card: true, upi: true, wallet: false },
-      remember_customer: false,
-      handler: async (response: {
-        razorpay_order_id?: string;
-        razorpay_payment_id?: string;
-        razorpay_signature?: string;
-      }) => {
-        const res = await fetch("/api/checkout/verify", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(response),
-        });
-        if (res.ok) markPaid();
-        else {
-          const data = (await res.json().catch(() => ({}))) as { error?: string };
-          setFailReason(data.error ?? "Payment failed");
-          setState("failed");
-        }
-      },
-      modal: {
-        ondismiss: () => {
-          if (state !== "paid") setState("paying");
-        },
-      },
-    });
-    checkout.on("payment.failed", (response) => {
-      const reason = response.error?.description || "Payment failed";
-      setFailReason(reason);
-      setState("failed");
-      void fetch("/api/checkout/fail", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: created.id, reason }),
-      });
-    });
-    checkout.open();
-  };
-
-  const payWithApp = async (app: UpiApp) => {
-    const created = orderId ? { id: orderId } : await createOrder();
-    if (!created?.id) return;
-    openUpiApp(app, total, created.id);
   };
 
   return (
@@ -295,9 +145,9 @@ function CheckoutDialog({ onClose }: { onClose: () => void }) {
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#e31b23]">checkout</p>
             <h2 id="checkout-title" className="mt-1 text-2xl font-extrabold tracking-tight text-[#171411]">
-              {state === "paid" ? "order locked in." : state === "failed" ? "payment failed." : "your drop"}
+              {state === "placed" ? "order locked in." : "your drop"}
             </h2>
-            {state !== "paid" && state !== "failed" && (
+            {state !== "placed" && (
               <p className="text-sm text-[#7a7268]">
                 {lines.length} {lines.length === 1 ? "style" : "styles"} · {formatInr(total)}
               </p>
@@ -313,13 +163,23 @@ function CheckoutDialog({ onClose }: { onClose: () => void }) {
           </button>
         </div>
 
-        {state === "paid" ? (
+        {state === "placed" ? (
           <div className="mt-8 text-center">
             <p className="font-hand text-3xl text-[#9b2242]">we got you.</p>
             <p className="mt-3 font-extrabold tracking-tight text-[#171411]">{orderId}</p>
             <p className="mt-3 text-sm leading-relaxed text-[#7a7268]">
-              payment confirmed. packing the cans. {formatInr(paid)} · keep this order id.
+              scan the QR, pay {formatInr(placedTotal)} to {BRAND.vpa}, and keep this order id. we confirm the UPI and pack.
             </p>
+            <div className="mx-auto mt-5 rounded-2xl bg-white p-3">
+              <QRCodeSVG
+                value={upiUri}
+                size={160}
+                bgColor="#ffffff"
+                fgColor="#171411"
+                marginSize={1}
+                title={`UPI QR for ${BRAND.vpa}`}
+              />
+            </div>
             <button
               type="button"
               onClick={onClose}
@@ -328,35 +188,8 @@ function CheckoutDialog({ onClose }: { onClose: () => void }) {
               Back to the drop
             </button>
           </div>
-        ) : state === "failed" ? (
-          <div className="mt-8 text-center">
-            <p className="text-sm leading-relaxed text-[#7a7268]">
-              {failReason || "Payment failed"}. No order is locked. Try GPay or PhonePe again.
-            </p>
-            <button
-              type="button"
-              onClick={() => {
-                setState(orderId ? "paying" : "form");
-                setFailReason("");
-                setError("");
-              }}
-              className="mt-8 rounded-full bg-[#171411] px-6 py-3.5 text-sm font-extrabold text-[#fffaf3]"
-            >
-              Try again
-            </button>
-          </div>
         ) : (
-          <form
-            className="mt-6 flex flex-col gap-3"
-            onSubmit={(e) => {
-              if (razorpay) {
-                void payWithRazorpay(e);
-                return;
-              }
-              e.preventDefault();
-              void payWithApp("gpay");
-            }}
-          >
+          <form className="mt-6 flex flex-col gap-3" onSubmit={(e) => void placeOrder(e)}>
             <ul className="space-y-3 rounded-[1.1rem] border border-[#171411]/10 bg-[#efe8dc] p-3">
               {lines.map((line) => (
                 <li key={line.id} className="flex items-center justify-between gap-3">
@@ -364,8 +197,10 @@ function CheckoutDialog({ onClose }: { onClose: () => void }) {
                     <Image
                       src={line.image}
                       alt=""
-                      width={56}
-                      height={56}
+                      width={112}
+                      height={112}
+                      quality={100}
+                      sizes="56px"
                       loading="eager"
                       className="h-14 w-14 rounded-xl object-cover"
                     />
@@ -409,6 +244,15 @@ function CheckoutDialog({ onClose }: { onClose: () => void }) {
             />
             <input
               required
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="checkout-input"
+              autoComplete="email"
+            />
+            <input
+              required
               placeholder="Phone"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
@@ -425,68 +269,47 @@ function CheckoutDialog({ onClose }: { onClose: () => void }) {
               autoComplete="street-address"
             />
 
-            {razorpay ? (
-              <button
-                type="submit"
-                disabled={busy}
-                className="mt-2 flex w-full items-center justify-center rounded-full bg-[#171411] px-6 py-3.5 text-sm font-extrabold text-[#fffaf3] transition hover:bg-[#e31b23] disabled:opacity-60"
-              >
-                {busy ? "Opening pay…" : `Pay ${formatInr(total)} with GPay / PhonePe`}
-              </button>
-            ) : (
-              <>
-                <p className="mt-1 text-center text-[11px] font-semibold uppercase tracking-[0.16em] text-[#7a7268]">
-                  pay with
-                </p>
-                <div className="grid grid-cols-2 gap-2">
-                  <button type="button" onClick={() => payWithApp("gpay")} className="rounded-full bg-[#efe8dc] px-2 py-3 text-sm font-extrabold text-[#171411]">
-                    GPay
-                  </button>
-                  <button type="button" onClick={() => payWithApp("phonepe")} className="rounded-full bg-[#efe8dc] px-2 py-3 text-sm font-extrabold text-[#171411]">
-                    PhonePe
-                  </button>
-                  <button type="button" onClick={() => payWithApp("paytm")} className="rounded-full bg-[#efe8dc] px-2 py-3 text-sm font-extrabold text-[#171411]">
-                    Paytm
-                  </button>
-                  <button type="button" onClick={() => payWithApp("bhim")} className="rounded-full bg-[#efe8dc] px-2 py-3 text-sm font-extrabold text-[#171411]">
-                    BHIM
-                  </button>
-                </div>
-                <button
-                  type="button"
-                  onClick={async () => {
-                    try {
-                      await navigator.clipboard.writeText(BRAND.vpa);
-                      setCopied(true);
-                      window.setTimeout(() => setCopied(false), 1600);
-                    } catch {
-                      setCopied(false);
-                    }
-                  }}
-                  className="text-center text-[11px] font-semibold text-[#7a7268] underline decoration-[#171411]/20"
-                >
-                  {copied ? "UPI ID copied" : `or copy ${BRAND.vpa}`}
-                </button>
-                <p className="text-center text-[11px] text-[#7a7268]">
-                  {formatInr(total)} to {BRAND.vpa} · GPay, PhonePe, Paytm or BHIM
-                </p>
-                <div className="mx-auto mt-2 rounded-2xl bg-white p-3">
-                  <QRCodeSVG
-                    value={upiUri}
-                    size={180}
-                    bgColor="#ffffff"
-                    fgColor="#171411"
-                    marginSize={1}
-                    title={`UPI QR for ${BRAND.vpa}`}
-                  />
-                </div>
-                <p className="text-center text-[11px] text-[#7a7268]">
-                  {state === "paying"
-                    ? "finish in GPay or PhonePe. this page updates when the payment is confirmed."
-                    : "desktop? scan with GPay or PhonePe."}
-                </p>
-              </>
-            )}
+            <p className="mt-1 text-center text-[11px] font-semibold uppercase tracking-[0.16em] text-[#7a7268]">
+              pay with UPI
+            </p>
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(BRAND.vpa);
+                  setCopied(true);
+                  window.setTimeout(() => setCopied(false), 1600);
+                } catch {
+                  setCopied(false);
+                }
+              }}
+              className="text-center text-[11px] font-semibold text-[#7a7268] underline decoration-[#171411]/20"
+            >
+              {copied ? "UPI ID copied" : `scan or copy ${BRAND.vpa}`}
+            </button>
+            <p className="text-center text-[11px] text-[#7a7268]">
+              {formatInr(total)} to {BRAND.vpa}
+            </p>
+            <div className="mx-auto mt-1 rounded-2xl bg-white p-3">
+              <QRCodeSVG
+                value={upiUri}
+                size={180}
+                bgColor="#ffffff"
+                fgColor="#171411"
+                marginSize={1}
+                title={`UPI QR for ${BRAND.vpa}`}
+              />
+            </div>
+            <p className="text-center text-[11px] text-[#7a7268]">
+              scan with GPay or PhonePe, then place the order. we confirm the payment from /admin.
+            </p>
+            <button
+              type="submit"
+              disabled={busy}
+              className="mt-2 rounded-full bg-[#171411] px-6 py-3.5 text-sm font-extrabold text-[#fffaf3] disabled:opacity-60"
+            >
+              {busy ? "Placing…" : "I paid — place order"}
+            </button>
             {error && <p className="text-sm text-[#e31b23]">{error}</p>}
           </form>
         )}

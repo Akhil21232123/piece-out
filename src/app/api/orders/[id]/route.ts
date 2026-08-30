@@ -3,19 +3,28 @@ import { cookies } from "next/headers";
 import { adminPassword, cookieMatches, emailOrder, getOrder, updateOrder } from "@/lib/orders";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+const LIVE_HEADERS = {
+  "Cache-Control": "no-store, no-cache, must-revalidate",
+};
 
 export async function GET(_request: Request, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params;
   const order = await getOrder(id);
   if (!order) {
-    return NextResponse.json({ error: "Order not found." }, { status: 404 });
+    return NextResponse.json({ error: "Order not found." }, { status: 404, headers: LIVE_HEADERS });
   }
-  return NextResponse.json({
-    id: order.id,
-    status: order.status,
-    total: order.total,
-    failureReason: order.failureReason ?? "",
-  });
+  return NextResponse.json(
+    {
+      id: order.id,
+      status: order.status,
+      total: order.total,
+      confirming: Boolean(order.utr) && order.status === "pending",
+      failureReason: order.failureReason ?? "",
+    },
+    { headers: LIVE_HEADERS },
+  );
 }
 
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {

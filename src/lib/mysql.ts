@@ -33,6 +33,7 @@ export async function ensureMysqlSchema(db: mysql.Pool) {
       created_at DATETIME NOT NULL,
       status VARCHAR(16) NOT NULL,
       name VARCHAR(160) NOT NULL,
+      email VARCHAR(190) NOT NULL DEFAULT '',
       phone VARCHAR(20) NOT NULL,
       address TEXT NOT NULL,
       total INT NOT NULL,
@@ -45,5 +46,10 @@ export async function ensureMysqlSchema(db: mysql.Pool) {
       KEY shop_orders_created_at (created_at)
     )
   `);
+  try {
+    await db.query("ALTER TABLE shop_orders ADD COLUMN email VARCHAR(190) NOT NULL DEFAULT ''");
+  } catch {
+    /* already present */
+  }
   ready = true;
 }

@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { makeOrderId, priceFor } from "@/lib/brand";
 import { PRODUCTS } from "@/data/products";
-import { saveOrder, type OrderItem, type ShopOrder } from "@/lib/orders";
-import { createRazorpayOrder, razorpayConfigured } from "@/lib/razorpay";
+import { emailOrder, saveOrder, type OrderItem, type ShopOrder } from "@/lib/orders";
+import { isEmail } from "@/lib/checkout";
 
 export const runtime = "nodejs";
 
@@ -27,12 +27,14 @@ export async function POST(request: Request) {
 
   const payload = body as {
     name?: string;
+    email?: string;
     phone?: string;
     address?: string;
     items?: unknown;
   };
 
   const name = payload.name?.trim() ?? "";
+  const email = (payload.email ?? "").trim().toLowerCase();
   const phone = (payload.phone ?? "").replace(/\s/g, "");
   const address = payload.address?.trim() ?? "";
   const rawItems = Array.isArray(payload.items) ? payload.items.filter(isItem) : [];
@@ -51,8 +53,11 @@ export async function POST(request: Request) {
     });
   }
 
-  if (!name || !phone || !address) {
-    return NextResponse.json({ error: "Name, phone, and full address are required." }, { status: 400 });
+  if (!name || !email || !phone || !address) {
+    return NextResponse.json({ error: "Name, email, phone, and full address are required." }, { status: 400 });
+  }
+  if (!isEmail(email)) {
+    return NextResponse.json({ error: "Enter a valid email." }, { status: 400 });
   }
   if (!/^\d{10}$/.test(phone)) {
     return NextResponse.json({ error: "Enter a 10-digit phone number." }, { status: 400 });
@@ -66,6 +71,7 @@ export async function POST(request: Request) {
     createdAt: new Date().toISOString(),
     status: "pending",
     name,
+    email,
     phone,
     address,
     utr: "",
@@ -74,20 +80,21 @@ export async function POST(request: Request) {
   };
 
   try {
-    if (razorpayConfigured()) {
-      order.razorpayOrderId = await createRazorpayOrder(order.total, order.id);
-    }
     await saveOrder(order);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Could not start checkout.";
     return NextResponse.json({ error: message }, { status: 502 });
   }
 
+  try {
+    await emailOrder(order);
+  } catch {
+    /* order is saved even if mail fails */
+  }
+
   return NextResponse.json({
     ok: true,
     id: order.id,
     total: order.total,
-    razorpay: razorpayConfigured(),
-    razorpayOrderId: order.razorpayOrderId ?? "",
   });
 }

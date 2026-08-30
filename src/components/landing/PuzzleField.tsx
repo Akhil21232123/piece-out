@@ -48,6 +48,10 @@ export function PuzzleField() {
       let width = 0;
       let height = 0;
       let size = 20;
+      let cols = 8;
+      let rows = 8;
+      let ox = 0;
+      let oy = 0;
       let scrolling = false;
       let aimX = -9999;
       let aimY = -9999;
@@ -100,7 +104,7 @@ export function PuzzleField() {
         const vh = window.innerHeight;
         const w = Math.ceil(vw * 1.14);
         const h = Math.ceil(vh * 1.32);
-        dpr = Math.min(2, window.devicePixelRatio || 1);
+        dpr = Math.min(1.25, window.devicePixelRatio || 1);
         width = w;
         height = h;
         shift.style.width = `${w}px`;
@@ -113,22 +117,20 @@ export function PuzzleField() {
         canvas.style.height = `${h}px`;
         board.width = canvas.width;
         board.height = canvas.height;
-        ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = "high";
-        boardCtx.imageSmoothingEnabled = true;
-        boardCtx.imageSmoothingQuality = "high";
+        ctx.imageSmoothingEnabled = false;
+        boardCtx.imageSmoothingEnabled = false;
 
-        size = w < 640 ? 18 : 20;
-        let cols = Math.ceil(w / size) + 2;
-        let rows = Math.ceil(h / size) + 2;
-        while (cols * rows > 900) {
+        size = w < 640 ? 22 : 26;
+        cols = Math.ceil(w / size) + 2;
+        rows = Math.ceil(h / size) + 2;
+        while (cols * rows > 360) {
           size += 1;
           cols = Math.ceil(w / size) + 2;
           rows = Math.ceil(h / size) + 2;
         }
 
-        const ox = (w - (cols - 1) * size) / 2;
-        const oy = (h - (rows - 1) * size) / 2;
+        ox = (w - (cols - 1) * size) / 2;
+        oy = (h - (rows - 1) * size) / 2;
         const next: Cell[] = [];
         boardCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
         boardCtx.fillStyle = PAPER;
@@ -161,33 +163,53 @@ export function PuzzleField() {
           resizeAt = 0;
         }
         if (scrolling || document.hidden) {
+          for (const cell of cells) {
+            cell.x = cell.homeX;
+            cell.y = cell.homeY;
+            cell.rot = 0;
+          }
           blit();
+          ticking = false;
+          gsap.ticker.remove(draw);
           return;
         }
 
-        const dt = Math.min(2, gsap.ticker.deltaRatio(60));
-        cx += (aimX - cx) * (1 - Math.pow(0.82, dt));
-        cy += (aimY - cy) * (1 - Math.pow(0.82, dt));
-        energy *= Math.pow(0.91, dt);
+        const dt = Math.min(1.6, gsap.ticker.deltaRatio(60));
+        cx += (aimX - cx) * (1 - Math.pow(0.5, dt));
+        cy += (aimY - cy) * (1 - Math.pow(0.5, dt));
+        energy *= Math.pow(0.9, dt);
 
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        ctx.fillStyle = PAPER;
-        ctx.fillRect(0, 0, width, height);
+        if (energy < 0.03) {
+          for (const cell of cells) {
+            cell.x = cell.homeX;
+            cell.y = cell.homeY;
+            cell.rot = 0;
+          }
+          blit();
+          ticking = false;
+          gsap.ticker.remove(draw);
+          return;
+        }
 
-        const radius = 108;
+        blit();
+        const radius = 96;
         const r2 = radius * radius;
-        const lift = 12 * energy;
-        const t = performance.now() * 0.0007;
-        const ease = 1 - Math.pow(0.78, dt);
-
-        for (let i = 0; i < cells.length; i++) {
-          const cell = cells[i];
-          const idleX = Math.sin(t + i * 0.37) * 0.55;
-          const idleY = Math.cos(t * 0.9 + i * 0.29) * 0.55;
-          let tx = cell.homeX;
-          let ty = cell.homeY;
-          let tr = 0;
-          if (energy > 0.03) {
+        const lift = 10 * energy;
+        const ease = 1 - Math.pow(0.55, dt);
+        const pad = radius + size;
+        const c0 = Math.max(0, Math.floor((cx - ox - pad) / size));
+        const c1 = Math.min(cols - 1, Math.floor((cx - ox + pad) / size));
+        const r0 = Math.max(0, Math.floor((cy - oy - pad) / size));
+        const r1 = Math.min(rows - 1, Math.floor((cy - oy + pad) / size));
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        for (let r = r0; r <= r1; r++) {
+          const row = r * cols;
+          for (let c = c0; c <= c1; c++) {
+            const cell = cells[row + c];
+            if (!cell) continue;
+            let tx = cell.homeX;
+            let ty = cell.homeY;
+            let tr = 0;
             const dx = cell.homeX - cx;
             const dy = cell.homeY - cy;
             const d2 = dx * dx + dy * dy;
@@ -196,13 +218,13 @@ export function PuzzleField() {
               const fall = (1 - d / radius) ** 2;
               tx += (dx / d) * fall * lift;
               ty += (dy / d) * fall * lift;
-              tr = fall * 0.14 * (dx > 0 ? 1 : -1);
+              tr = fall * 0.12 * (dx > 0 ? 1 : -1);
             }
+            cell.x += (tx - cell.x) * ease;
+            cell.y += (ty - cell.y) * ease;
+            cell.rot += (tr - cell.rot) * ease;
+            paintCell(ctx, cell, 0, 0, cell.rot);
           }
-          cell.x += (tx - cell.x) * ease;
-          cell.y += (ty - cell.y) * ease;
-          cell.rot += (tr - cell.rot) * ease;
-          paintCell(ctx, cell, idleX, idleY, cell.rot);
         }
         ctx.globalAlpha = 1;
       };
@@ -216,9 +238,11 @@ export function PuzzleField() {
       layout();
 
       const onResize = () => {
-        resizeAt = performance.now();
-        if (live) kick();
-        else layout();
+        if (live && ticking) {
+          resizeAt = performance.now();
+          return;
+        }
+        layout();
       };
 
       const stopPulse = onScrollPulse((pulse) => {
@@ -226,11 +250,14 @@ export function PuzzleField() {
         if (!live) return;
         if (!pulse.settling) {
           scrolling = true;
-          blit();
+          if (ticking) {
+            blit();
+            ticking = false;
+            gsap.ticker.remove(draw);
+          }
           return;
         }
         scrolling = false;
-        kick();
       });
 
       if (!live) {
@@ -243,14 +270,15 @@ export function PuzzleField() {
         };
       }
 
-      kick();
       const safe = contextSafe ?? ((fn: (e: PointerEvent) => void) => fn);
 
       const onMove = safe((e: PointerEvent) => {
         if (e.pointerType !== "mouse" || scrolling) return;
+        if (e.target instanceof Element && e.target.closest(".puzzle-host, [role=dialog]")) return;
         aimX = e.clientX - shift.getBoundingClientRect().left;
         aimY = e.clientY - shift.getBoundingClientRect().top;
-        energy = Math.min(1.2, energy + 0.22);
+        energy = Math.min(1.15, energy + 0.2);
+        kick();
       });
 
       const onDown = safe((e: PointerEvent) => {
@@ -258,11 +286,14 @@ export function PuzzleField() {
         aimX = e.clientX - shift.getBoundingClientRect().left;
         aimY = e.clientY - shift.getBoundingClientRect().top;
         energy = 1.25;
+        kick();
       });
 
       const onVis = () => {
-        if (document.hidden) blit();
-        else kick();
+        if (!document.hidden) return;
+        blit();
+        ticking = false;
+        gsap.ticker.remove(draw);
       };
 
       window.addEventListener("pointermove", onMove, { passive: true });

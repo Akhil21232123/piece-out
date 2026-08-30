@@ -64,6 +64,7 @@ async function writeFileStore(orders: ShopOrder[]) {
 function normalizeOrder(row: ShopOrder): ShopOrder {
   return {
     ...row,
+    email: row.email ?? "",
     status: row.status === "paid" || row.status === "failed" || row.status === "pending" ? row.status : "paid",
     utr: row.utr ?? "",
   };
@@ -91,6 +92,7 @@ function fromDb(row: Record<string, unknown>): ShopOrder {
         : new Date(String(row.created_at)).toISOString(),
     status: row.status as OrderStatus,
     name: String(row.name),
+    email: String(row.email ?? ""),
     phone: String(row.phone),
     address: String(row.address),
     total: Number(row.total),
@@ -108,7 +110,7 @@ async function pgSave(order: ShopOrder) {
   await ensureSchema(sql);
   await sql`
     INSERT INTO shop_orders (
-      id, created_at, status, name, phone, address, total, items, utr,
+      id, created_at, status, name, email, phone, address, total, items, utr,
       payment_id, razorpay_order_id, failure_reason
     )
     VALUES (
@@ -116,6 +118,7 @@ async function pgSave(order: ShopOrder) {
       ${order.createdAt},
       ${order.status},
       ${order.name},
+      ${order.email},
       ${order.phone},
       ${order.address},
       ${order.total},
@@ -127,6 +130,12 @@ async function pgSave(order: ShopOrder) {
     )
     ON CONFLICT (id) DO UPDATE SET
       status = EXCLUDED.status,
+      name = EXCLUDED.name,
+      email = EXCLUDED.email,
+      phone = EXCLUDED.phone,
+      address = EXCLUDED.address,
+      total = EXCLUDED.total,
+      items = EXCLUDED.items,
       utr = EXCLUDED.utr,
       payment_id = EXCLUDED.payment_id,
       razorpay_order_id = EXCLUDED.razorpay_order_id,
@@ -141,11 +150,17 @@ async function mysqlSave(order: ShopOrder) {
   await ensureMysqlSchema(db);
   await db.query(
     `INSERT INTO shop_orders (
-      id, created_at, status, name, phone, address, total, items, utr,
+      id, created_at, status, name, email, phone, address, total, items, utr,
       payment_id, razorpay_order_id, failure_reason
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON DUPLICATE KEY UPDATE
       status = VALUES(status),
+      name = VALUES(name),
+      email = VALUES(email),
+      phone = VALUES(phone),
+      address = VALUES(address),
+      total = VALUES(total),
+      items = VALUES(items),
       utr = VALUES(utr),
       payment_id = VALUES(payment_id),
       razorpay_order_id = VALUES(razorpay_order_id),
@@ -155,6 +170,7 @@ async function mysqlSave(order: ShopOrder) {
       new Date(order.createdAt),
       order.status,
       order.name,
+      order.email,
       order.phone,
       order.address,
       order.total,
@@ -243,6 +259,10 @@ async function redisSave(order: ShopOrder) {
   await redis(["LTRIM", LIST_KEY, 0, 399]);
 }
 
+export function durableStoreConfigured(): boolean {
+  return Boolean(sqlClient() || mysqlPool());
+}
+
 export async function saveOrder(order: ShopOrder) {
   upsertMemory(order);
   await upsertFile(order);
@@ -252,10 +272,10 @@ export async function saveOrder(order: ShopOrder) {
 }
 
 export async function getOrder(id: string): Promise<ShopOrder | null> {
-  const fromMysql = await mysqlGet(id);
-  if (fromMysql) return fromMysql;
   const fromPg = await pgGet(id);
   if (fromPg) return fromPg;
+  const fromMysql = await mysqlGet(id);
+  if (fromMysql) return fromMysql;
   const raw = await redis(["GET", `${ROW_KEY}${id}`]);
   if (typeof raw === "string") {
     try {
@@ -270,10 +290,10 @@ export async function getOrder(id: string): Promise<ShopOrder | null> {
 }
 
 export async function getOrderByRazorpayId(razorpayOrderId: string): Promise<ShopOrder | null> {
-  const fromMysql = await mysqlByRazorpay(razorpayOrderId);
-  if (fromMysql) return fromMysql;
   const fromPg = await pgByRazorpay(razorpayOrderId);
   if (fromPg) return fromPg;
+  const fromMysql = await mysqlByRazorpay(razorpayOrderId);
+  if (fromMysql) return fromMysql;
   const listed = await listOrders();
   return listed.find((row) => row.razorpayOrderId === razorpayOrderId) ?? null;
 }
@@ -290,10 +310,12 @@ export async function updateOrder(id: string, patch: Partial<ShopOrder>): Promis
 }
 
 export async function listOrders(): Promise<ShopOrder[]> {
+  if (sqlClient()) {
+    const fromPg = await pgList();
+    if (fromPg) return fromPg;
+  }
   const fromMysql = await mysqlList();
   if (fromMysql && fromMysql.length) return fromMysql;
-  const fromPg = await pgList();
-  if (fromPg && fromPg.length) return fromPg;
   const auth = redisAuth();
   if (auth) {
     const rows = await redis(["LRANGE", LIST_KEY, 0, 399]);
@@ -372,6 +394,7 @@ export async function emailOrder(order: ShopOrder) {
     `Total ₹${order.total}`,
     "",
     `Name: ${order.name}`,
+    `Email: ${order.email || "—"}`,
     `Phone: ${order.phone}`,
     `Address: ${order.address}`,
     order.paymentId ? `Payment: ${order.paymentId}` : "",
@@ -415,6 +438,7 @@ export async function emailOrder(order: ShopOrder) {
       orderId: order.id,
       status: order.status,
       name: order.name,
+      email: order.email,
       phone: order.phone,
       address: order.address,
       paymentId: order.paymentId ?? "",

@@ -1,5 +1,13 @@
 import { BRAND } from "./brand";
 
+export function isEmail(value: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) && value.length <= 190;
+}
+
+export function isUtr(value: string): boolean {
+  return /^[A-Za-z0-9]{12,22}$/.test(value);
+}
+
 export type CheckoutItem = {
   productId: string;
   name: string;

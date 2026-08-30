@@ -72,7 +72,6 @@ export const PRODUCTS: Product[] = [
     image: "/products/diet-coke.jpg",
     width: 1024,
     height: 990,
-    livePuzzle: false,
   },
   {
     id: "po-02",

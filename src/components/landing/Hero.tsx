@@ -84,8 +84,9 @@ export function Hero() {
             preload
             loading="eager"
             fetchPriority="high"
-            quality={90}
-            sizes="(max-width: 1024px) 100vw, 58vw"
+            quality={100}
+            unoptimized
+            sizes="(max-width: 1024px) 100vw, 1024px"
             className="h-auto w-full max-w-full"
           />
         </div>

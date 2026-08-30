@@ -16,8 +16,8 @@ export function Shop() {
           </p>
         </div>
         <div className="grid grid-cols-1 gap-y-8 sm:grid-cols-2 sm:gap-x-5 sm:gap-y-12 sm:px-4 md:px-8 lg:gap-x-8">
-          {PRODUCTS.map((product) => (
-            <ProductCard key={product.id} product={product} />
+          {PRODUCTS.map((product, index) => (
+            <ProductCard key={product.id} product={product} eager={index < 2} />
           ))}
         </div>
       </div>

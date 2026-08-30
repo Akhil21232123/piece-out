@@ -13,6 +13,7 @@ export type ShopOrder = {
   createdAt: string;
   status: OrderStatus;
   name: string;
+  email: string;
   phone: string;
   address: string;
   utr: string;

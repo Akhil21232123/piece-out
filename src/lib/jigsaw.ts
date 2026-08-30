@@ -19,15 +19,16 @@ export function edgesFor(col: number, row: number, cols: number, rows: number): 
   return { n: north, e: east, s: south, w: west };
 }
 
-export function jigPath(size: number, edges: PieceEdges): Path2D {
+export function jigPath(width: number, edges: PieceEdges, height = width): Path2D {
   const path = new Path2D();
-  const tab = size * 0.265;
-  const neck = size * 0.16;
+  const span = Math.min(width, height);
+  const tab = span * 0.23;
+  const neck = span * 0.145;
   path.moveTo(0, 0);
-  bump(path, 0, 0, size, 0, edges.n, tab, neck);
-  bump(path, size, 0, size, size, edges.e, tab, neck);
-  bump(path, size, size, 0, size, edges.s, tab, neck);
-  bump(path, 0, size, 0, 0, edges.w, tab, neck);
+  bump(path, 0, 0, width, 0, edges.n, tab, neck);
+  bump(path, width, 0, width, height, edges.e, tab, neck);
+  bump(path, width, height, 0, height, edges.s, tab, neck);
+  bump(path, 0, height, 0, 0, edges.w, tab, neck);
   path.closePath();
   return path;
 }

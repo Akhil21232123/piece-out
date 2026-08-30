@@ -4,18 +4,18 @@ import { useRef, useState } from "react";
 import Image from "next/image";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import type { Product } from "@/data/products";
 import { formatInr, priceFor } from "@/lib/brand";
 import { useCartStore } from "@/store/cartStore";
 import { FrameSwitch } from "./FrameSwitch";
 import { ProductPuzzle } from "./ProductPuzzle";
 
-gsap.registerPlugin(useGSAP, ScrollTrigger);
+gsap.registerPlugin(useGSAP);
 
-export function ProductCard({ product }: { product: Product }) {
+export function ProductCard({ product, eager = false }: { product: Product; eager?: boolean }) {
   const stageRef = useRef<HTMLDivElement>(null);
   const liftRef = useRef<HTMLDivElement>(null);
+  const glassRef = useRef<HTMLDivElement>(null);
   const [withFrame, setWithFrame] = useState(false);
   const [added, setAdded] = useState(false);
   const [broken, setBroken] = useState(false);
@@ -23,35 +23,34 @@ export function ProductCard({ product }: { product: Product }) {
 
   useGSAP(
     () => {
-      const stage = stageRef.current;
-      const lift = liftRef.current;
-      if (!stage || !lift) return;
-      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-      const phone =
-        window.matchMedia("(pointer: coarse)").matches || window.innerWidth < 720;
-      if (!phone) return;
-
-      gsap.set(lift, { transformOrigin: "50% 78%", force3D: true });
-      gsap.fromTo(
-        lift,
-        { y: 36, rotateX: 7.5, z: -20, scale: 0.98 },
-        {
-          y: -10,
-          rotateX: -3.8,
-          z: 28,
-          scale: 1,
-          ease: "none",
-          scrollTrigger: {
-            trigger: stage,
-            start: "top 94%",
-            end: "bottom 8%",
-            scrub: 0.5,
+      const glass = glassRef.current;
+      if (!glass) return;
+      const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (withFrame) {
+        gsap.fromTo(
+          glass,
+          { autoAlpha: 0, scale: 0.94 },
+          {
+            autoAlpha: 1,
+            scale: 1,
+            duration: reduced ? 0 : 0.28,
+            ease: "power3.out",
+            overwrite: "auto",
           },
-        },
-      );
+        );
+      } else {
+        gsap.to(glass, {
+          autoAlpha: 0,
+          scale: 1.03,
+          duration: reduced ? 0 : 0.18,
+          ease: "power2.in",
+          overwrite: "auto",
+        });
+      }
     },
-    { scope: stageRef },
+    { scope: stageRef, dependencies: [withFrame] },
   );
+
   const qty = useCartStore((state) =>
     state.lines
       .filter((line) => line.productId === product.id)
@@ -70,6 +69,16 @@ export function ProductCard({ product }: { product: Product }) {
     });
     setAdded(true);
     window.setTimeout(() => setAdded(false), 900);
+    window.setTimeout(() => {
+      window.dispatchEvent(new Event("po-cart-pulse"));
+    }, 80);
+    const lift = liftRef.current;
+    if (!lift || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    gsap.fromTo(
+      lift,
+      { scale: 1 },
+      { scale: 0.985, duration: 0.12, yoyo: true, repeat: 1, ease: "power2.out", overwrite: "auto" },
+    );
   };
 
   return (
@@ -90,15 +99,19 @@ export function ProductCard({ product }: { product: Product }) {
                 alt={`${product.name} puzzle can and framed art`}
                 width={product.width}
                 height={product.height}
-                sizes="(max-width: 640px) 100vw, 50vw"
-                quality={90}
-                loading="eager"
+                sizes="(max-width: 640px) 100vw, 1024px"
+                quality={100}
+                unoptimized
+                loading={eager ? "eager" : "lazy"}
                 decoding="async"
                 className="product-shot h-auto w-full max-w-full"
                 onError={() => setBroken(true)}
               />
             )}
             {livePuzzle && !broken && <ProductPuzzle product={product} />}
+            <div ref={glassRef} className={`glass-pane ${withFrame ? "is-on" : ""}`} aria-hidden>
+              <span className="glass-glow" />
+            </div>
           </div>
         </div>
       </div>

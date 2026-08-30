@@ -11,6 +11,7 @@ let hooked = false;
 let lastY = 0;
 let dir: 1 | -1 = 1;
 let timer = 0;
+let busy = false;
 
 function ensure() {
   if (hooked || typeof window === "undefined") return;
@@ -24,14 +25,20 @@ function ensure() {
       if (dy > 0.8) dir = 1;
       else if (dy < -0.8) dir = -1;
       lastY = y;
+      busy = true;
       listeners.forEach((fn) => fn({ dir, settling: false, y }));
       window.clearTimeout(timer);
       timer = window.setTimeout(() => {
+        busy = false;
         listeners.forEach((fn) => fn({ dir, settling: true, y: lastY }));
       }, 88);
     },
     { passive: true },
   );
+}
+
+export function scrollBusy() {
+  return busy;
 }
 
 export function onScrollPulse(fn: Listener) {

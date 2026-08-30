@@ -22,6 +22,7 @@ export async function ensureSchema(sql: Sql) {
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       status TEXT NOT NULL,
       name TEXT NOT NULL,
+      email TEXT NOT NULL DEFAULT '',
       phone TEXT NOT NULL,
       address TEXT NOT NULL,
       total INTEGER NOT NULL,
@@ -32,6 +33,8 @@ export async function ensureSchema(sql: Sql) {
       failure_reason TEXT
     )
   `;
+  await sql`ALTER TABLE shop_orders ADD COLUMN IF NOT EXISTS email TEXT NOT NULL DEFAULT ''`;
   await sql`CREATE INDEX IF NOT EXISTS shop_orders_created_at ON shop_orders (created_at DESC)`;
+  await sql`CREATE INDEX IF NOT EXISTS shop_orders_email ON shop_orders (email)`;
   ready = true;
 }
