@@ -36,5 +36,26 @@ export async function ensureSchema(sql: Sql) {
   await sql`ALTER TABLE shop_orders ADD COLUMN IF NOT EXISTS email TEXT NOT NULL DEFAULT ''`;
   await sql`CREATE INDEX IF NOT EXISTS shop_orders_created_at ON shop_orders (created_at DESC)`;
   await sql`CREATE INDEX IF NOT EXISTS shop_orders_email ON shop_orders (email)`;
+  await sql`CREATE INDEX IF NOT EXISTS shop_orders_status ON shop_orders (status)`;
+  await sql`
+    CREATE TABLE IF NOT EXISTS waitlist (
+      id TEXT PRIMARY KEY,
+      email TEXT UNIQUE NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
+  await sql`CREATE INDEX IF NOT EXISTS waitlist_created_at ON waitlist (created_at DESC)`;
   ready = true;
+}
+
+export async function addWaitlistEmail(email: string): Promise<void> {
+  const sql = sqlClient();
+  if (!sql) return;
+  await ensureSchema(sql);
+  const id = crypto.randomUUID();
+  await sql`
+    INSERT INTO waitlist (id, email)
+    VALUES (${id}, ${email})
+    ON CONFLICT (email) DO NOTHING
+  `;
 }

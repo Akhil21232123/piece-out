@@ -1,25 +1,26 @@
 import type { Metadata, Viewport } from "next";
-import { Caveat, Outfit } from "next/font/google";
+import { Cormorant_Garamond, Outfit } from "next/font/google";
 import "./globals.css";
 
-const outfit = Outfit({
+const display = Cormorant_Garamond({
   variable: "--font-display",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["400", "500", "600", "700"],
+  style: ["normal", "italic"],
   display: "swap",
 });
 
-const caveat = Caveat({
-  variable: "--font-caveat",
+const sans = Outfit({
+  variable: "--font-body",
   subsets: ["latin"],
-  weight: ["500", "600", "700"],
+  weight: ["300", "400", "500"],
   display: "swap",
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://pieceout.shop"),
-  title: "piece/out — puzzles you can pop open",
-  description: "Puzzles you can pop open. One hour off the algorithm. ₹599 / ₹699 framed.",
+  metadataBase: new URL("https://empirique.house"),
+  title: "Empirique — Coming. Unseen.",
+  description: "Some things aren't meant to be seen. Only felt. Empirique — a private house.",
   icons: { icon: "/favicon.svg" },
 };
 
@@ -27,16 +28,16 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#efe8dc",
+  themeColor: "#070506",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${outfit.variable} ${caveat.variable} antialiased`}
+      className={`${display.variable} ${sans.variable} antialiased`}
     >
-      <body className="bg-[#efe8dc] text-[#171411]">{children}</body>
+      <body className="bg-[#070506] text-[#D4C4B0]">{children}</body>
     </html>
   );
 }

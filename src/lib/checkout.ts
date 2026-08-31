@@ -4,6 +4,13 @@ export function isEmail(value: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) && value.length <= 190;
 }
 
+export function normalizePhone(value: string): string {
+  const digits = value.replace(/\D/g, "");
+  if (digits.length === 12 && digits.startsWith("91")) return digits.slice(2);
+  if (digits.length === 11 && digits.startsWith("0")) return digits.slice(1);
+  return digits;
+}
+
 export function isUtr(value: string): boolean {
   return /^[A-Za-z0-9]{12,22}$/.test(value);
 }

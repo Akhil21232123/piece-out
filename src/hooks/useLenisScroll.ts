@@ -7,18 +7,15 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
-/**
- * Smooth scroll via Lenis, synchronized with GSAP ScrollTrigger.
- */
 export function useLenisScroll(enabled = true) {
   useEffect(() => {
     if (!enabled) return;
 
     const lenis = new Lenis({
-      duration: 0.85,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      lerp: 0.08,
       smoothWheel: true,
-      touchMultiplier: 1.35,
+      wheelMultiplier: 0.88,
+      touchMultiplier: 1.05,
       autoRaf: false,
     });
 
@@ -31,12 +28,14 @@ export function useLenisScroll(enabled = true) {
     gsap.ticker.add(tickerCallback);
     gsap.ticker.lagSmoothing(0);
 
-    const onResize = () => ScrollTrigger.refresh();
-    window.addEventListener("resize", onResize);
-    requestAnimationFrame(() => ScrollTrigger.refresh());
+    const refresh = () => ScrollTrigger.refresh();
+    window.addEventListener("resize", refresh);
+    const fontsReady = document.fonts?.ready.then(refresh);
+    requestAnimationFrame(() => requestAnimationFrame(refresh));
 
     return () => {
-      window.removeEventListener("resize", onResize);
+      window.removeEventListener("resize", refresh);
+      void fontsReady;
       gsap.ticker.remove(tickerCallback);
       delete (window as unknown as { __lenis?: Lenis }).__lenis;
       lenis.destroy();
