@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from "next";
-import { Cormorant_Garamond, Outfit } from "next/font/google";
+import { Bodoni_Moda, Manrope } from "next/font/google";
 import "./globals.css";
 
-const display = Cormorant_Garamond({
+const display = Bodoni_Moda({
   variable: "--font-display",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
@@ -10,15 +10,15 @@ const display = Cormorant_Garamond({
   display: "swap",
 });
 
-const sans = Outfit({
+const sans = Manrope({
   variable: "--font-body",
   subsets: ["latin"],
-  weight: ["300", "400", "500"],
+  weight: ["300", "400", "500", "600"],
   display: "swap",
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://empirique.house"),
+  metadataBase: new URL("https://empirique.in"),
   title: "Empirique — Coming. Unseen.",
   description: "Some things aren't meant to be seen. Only felt. Empirique — a private house.",
   icons: { icon: "/favicon.svg" },

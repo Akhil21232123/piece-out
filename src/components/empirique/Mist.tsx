@@ -147,8 +147,8 @@ export function Mist() {
       const py = (pointer.y * 0.5 + 0.5) * height;
       const speed = Math.min(1.6, Math.hypot(velocity.x, velocity.y) * 18);
       const t = time * 0.12;
-      const open = Math.min(1, Math.max(0, (progress - 0.06) / 0.32));
-      const dive = Math.min(1, Math.max(0, (progress - 0.3) / 0.55));
+      const open = Math.min(1, Math.max(0, (progress - 0.04) / 0.26));
+      const dive = Math.min(1, Math.max(0, (progress - 0.2) / 0.64));
       const density = 0.92 + dive * 0.58 - open * 0.08;
       const wake = (hoveringBox ? 1.55 : 1) * (1 + speed * 0.85);
 

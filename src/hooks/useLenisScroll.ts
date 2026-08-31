@@ -12,10 +12,10 @@ export function useLenisScroll(enabled = true) {
     if (!enabled) return;
 
     const lenis = new Lenis({
-      lerp: 0.08,
+      lerp: 0.068,
       smoothWheel: true,
-      wheelMultiplier: 0.88,
-      touchMultiplier: 1.05,
+      wheelMultiplier: 0.78,
+      touchMultiplier: 1.02,
       autoRaf: false,
     });
 

@@ -77,7 +77,9 @@ canvas:not(.emp-mist):not(.relic-canvas) {
 }
 
 .font-display {
-  font-family: var(--font-display), "Times New Roman", serif;
+  font-family: var(--font-display), Didot, "Bodoni MT", "Times New Roman", serif;
+  font-optical-sizing: auto;
+  font-feature-settings: "kern" 1, "liga" 1;
 }
 
 .emp-grain,

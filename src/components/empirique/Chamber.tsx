@@ -62,12 +62,12 @@ export function Chamber() {
         scrollTrigger: {
           trigger: frame,
           start: "top top",
-          end: "+=135%",
+          end: "+=78%",
           pin: true,
           pinSpacing: true,
           anticipatePin: 1,
           fastScrollEnd: true,
-          scrub: 0.55,
+          scrub: 0.4,
           invalidateOnRefresh: true,
           onUpdate: (self) => useChamberStore.getState().setProgress(self.progress),
           onLeave: () => {
@@ -79,10 +79,10 @@ export function Chamber() {
         },
       });
 
-      tl.to(copy.current, { autoAlpha: 0, y: -22, duration: 0.18 }, 0);
+      tl.to(copy.current, { autoAlpha: 0, y: -18, duration: 0.16 }, 0);
       const shaft = document.querySelector(".emp-shaft");
-      if (shaft) tl.to(shaft, { opacity: 0, duration: 0.16 }, 0.22);
-      if (bleed) tl.to(bleed, { autoAlpha: 0, duration: 0.12 }, 0.86);
+      if (shaft) tl.to(shaft, { opacity: 0, duration: 0.12 }, 0.16);
+      if (bleed) tl.to(bleed, { autoAlpha: 0, duration: 0.14 }, 0.82);
     },
     { scope: root, dependencies: [introDone], revertOnUpdate: true },
   );

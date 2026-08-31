@@ -149,8 +149,8 @@ function CavityGlow({ reduced }: { reduced: boolean }) {
 
   useFrame((_, delta) => {
     const p = useChamberStore.getState().progress;
-    const open = reduced ? 0 : smoothstep(0.06, 0.38, p);
-    const dive = reduced ? 0 : smoothstep(0.32, 0.94, p);
+    const open = reduced ? 0 : smoothstep(0.04, 0.3, p);
+    const dive = reduced ? 0 : smoothstep(0.2, 0.84, p);
     const want = 2.2 + open * 8 + dive * 6;
     if (light.current) {
       light.current.intensity = THREE.MathUtils.damp(light.current.intensity, want, 3.2, delta);
@@ -168,8 +168,8 @@ function CameraDive({ reduced }: { reduced: boolean }) {
   useFrame((_, delta) => {
     const cam = camera as THREE.PerspectiveCamera;
     const p = useChamberStore.getState().progress;
-    const open = reduced ? 0 : smoothstep(0.06, 0.38, p);
-    const dive = reduced ? 0 : smoothstep(0.32, 0.94, p);
+    const open = reduced ? 0 : smoothstep(0.04, 0.3, p);
+    const dive = reduced ? 0 : smoothstep(0.2, 0.84, p);
     const y = THREE.MathUtils.lerp(THREE.MathUtils.lerp(0.32, 0.3, open), 0.34, dive);
     const z = THREE.MathUtils.lerp(THREE.MathUtils.lerp(3.55, 2.2, open), 0.52, dive);
     cam.position.x = THREE.MathUtils.damp(cam.position.x, 0.12 * (1 - dive), 3.6, delta);
@@ -203,7 +203,7 @@ function Rig({ reduced, lid }: { reduced: boolean; lid: RefObject<THREE.Group | 
     const group = root.current;
     if (!group) return;
     const { pointer, pulse, progress, objectRevealed } = useChamberStore.getState();
-    const open = reduced ? 0 : smoothstep(0.06, 0.38, progress);
+    const open = reduced ? 0 : smoothstep(0.04, 0.3, progress);
     appear.current = THREE.MathUtils.damp(appear.current, objectRevealed ? 1 : 0, 3.6, delta);
 
     if (pulse !== lastPulse.current) {

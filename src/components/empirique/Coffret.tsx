@@ -25,8 +25,8 @@ function CssCoffret() {
       const reduced = prefersReducedMotion();
       const tick = (time: number) => {
         const { pointer, progress } = useChamberStore.getState();
-        const open = reduced ? 0 : smoothstep(0.06, 0.38, progress);
-        const dive = reduced ? 0 : smoothstep(0.32, 0.94, progress);
+        const open = reduced ? 0 : smoothstep(0.04, 0.3, progress);
+        const dive = reduced ? 0 : smoothstep(0.2, 0.84, progress);
         const spin = reduced || open > 0.04 ? 0 : time * 7;
         gsap.set(poseEl, {
           rotationY: (-18 + pointer.x * 16 + spin) * (1 - open),
@@ -75,7 +75,7 @@ export function Coffret() {
       const onEnter = () => useChamberStore.getState().setHoveringBox(true);
       const onLeave = () => useChamberStore.getState().setHoveringBox(false);
       const onClick = () => {
-        if (useChamberStore.getState().progress > 0.08) return;
+        if (useChamberStore.getState().progress > 0.06) return;
         const line = WHISPERS[whisperIndex.current % WHISPERS.length];
         whisperIndex.current += 1;
         useChamberStore.getState().setWhisper(line);
