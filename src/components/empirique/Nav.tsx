@@ -37,7 +37,7 @@ export function Nav() {
             event.preventDefault();
             scrollToId("top");
           }}
-          className="font-display text-[11px] tracking-[0.46em] text-[#E8DCC8] md:text-xs"
+          className="font-display text-[13px] tracking-[0.28em] text-[#E8DCC8] md:text-sm"
         >
           EMPIRIQUE
         </a>

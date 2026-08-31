@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from "next";
-import { Bodoni_Moda, Manrope } from "next/font/google";
+import { Playfair_Display, Outfit } from "next/font/google";
 import "./globals.css";
 
-const display = Bodoni_Moda({
+const display = Playfair_Display({
   variable: "--font-display",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
@@ -10,10 +10,10 @@ const display = Bodoni_Moda({
   display: "swap",
 });
 
-const sans = Manrope({
+const sans = Outfit({
   variable: "--font-body",
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600"],
+  weight: ["300", "400", "500"],
   display: "swap",
 });
 

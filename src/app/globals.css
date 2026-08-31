@@ -41,8 +41,9 @@ html.is-locked body {
 }
 
 body {
-  font-family: var(--font-body), Helvetica Neue, sans-serif;
+  font-family: var(--font-body), "Helvetica Neue", sans-serif;
   font-weight: 300;
+  letter-spacing: 0.01em;
 }
 
 .has-gold-cursor,
@@ -77,9 +78,10 @@ canvas:not(.emp-mist):not(.relic-canvas) {
 }
 
 .font-display {
-  font-family: var(--font-display), Didot, "Bodoni MT", "Times New Roman", serif;
+  font-family: var(--font-display), "Playfair Display", Didot, "Bodoni MT", serif;
   font-optical-sizing: auto;
-  font-feature-settings: "kern" 1, "liga" 1;
+  font-feature-settings: "kern" 1, "liga" 1, "onum" 0;
+  font-synthesis: none;
 }
 
 .emp-grain,
@@ -196,6 +198,7 @@ canvas:not(.emp-mist):not(.relic-canvas) {
 
 .cine-title {
   text-rendering: optimizeLegibility;
+  font-weight: 500;
 }
 
 .emp-frame {
@@ -750,7 +753,7 @@ canvas:not(.emp-mist):not(.relic-canvas) {
 }
 
 .gallery-num {
-  font-family: var(--font-display), "Times New Roman", serif;
+  font-family: var(--font-display), "Playfair Display", Didot, serif;
   font-size: clamp(5.5rem, 16vw, 13rem);
   line-height: 0.8;
   letter-spacing: 0.04em;

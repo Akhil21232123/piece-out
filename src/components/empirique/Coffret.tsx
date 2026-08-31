@@ -25,8 +25,8 @@ function CssCoffret() {
       const reduced = prefersReducedMotion();
       const tick = (time: number) => {
         const { pointer, progress } = useChamberStore.getState();
-        const open = reduced ? 0 : smoothstep(0.04, 0.3, progress);
-        const dive = reduced ? 0 : smoothstep(0.2, 0.84, progress);
+        const open = reduced ? 0 : smoothstep(0.02, 0.26, progress);
+        const dive = reduced ? 0 : smoothstep(0.14, 0.98, progress);
         const spin = reduced || open > 0.04 ? 0 : time * 7;
         gsap.set(poseEl, {
           rotationY: (-18 + pointer.x * 16 + spin) * (1 - open),

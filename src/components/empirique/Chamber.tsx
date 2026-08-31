@@ -19,7 +19,6 @@ export function Chamber() {
     () => {
       const frame = view.current;
       if (!frame || !introDone) return;
-      const bleed = frame.querySelector(".relic-bleed") as HTMLElement | null;
 
       if (prefersReducedMotion()) {
         ScrollTrigger.create({
@@ -62,27 +61,20 @@ export function Chamber() {
         scrollTrigger: {
           trigger: frame,
           start: "top top",
-          end: "+=78%",
+          end: () => `+=${Math.round(window.innerHeight * 0.52)}`,
           pin: true,
           pinSpacing: true,
           anticipatePin: 1,
           fastScrollEnd: true,
-          scrub: 0.4,
+          scrub: 0.62,
           invalidateOnRefresh: true,
           onUpdate: (self) => useChamberStore.getState().setProgress(self.progress),
-          onLeave: () => {
-            if (bleed) gsap.set(bleed, { autoAlpha: 0 });
-          },
-          onEnterBack: () => {
-            if (bleed) gsap.set(bleed, { autoAlpha: 1 });
-          },
         },
       });
 
-      tl.to(copy.current, { autoAlpha: 0, y: -18, duration: 0.16 }, 0);
+      tl.to(copy.current, { autoAlpha: 0, y: -16, duration: 0.2 }, 0);
       const shaft = document.querySelector(".emp-shaft");
-      if (shaft) tl.to(shaft, { opacity: 0, duration: 0.12 }, 0.16);
-      if (bleed) tl.to(bleed, { autoAlpha: 0, duration: 0.14 }, 0.82);
+      if (shaft) tl.to(shaft, { opacity: 0, duration: 0.16 }, 0.08);
     },
     { scope: root, dependencies: [introDone], revertOnUpdate: true },
   );
@@ -107,7 +99,7 @@ export function Chamber() {
           ) : null}
           <h1
             ref={title}
-            className="font-display cine-title text-[clamp(1.35rem,3.6vw,2.35rem)] font-medium tracking-[0.38em] text-[#D4C4B0]"
+            className="font-display cine-title text-[clamp(1.45rem,3.8vw,2.55rem)] font-medium tracking-[0.28em] text-[#D4C4B0]"
           >
             EMPIRIQUE
           </h1>

@@ -110,7 +110,7 @@ export function Intro() {
         />
         <h1
           ref={mark}
-          className="font-display cine-title overflow-hidden whitespace-nowrap text-[clamp(2.1rem,8vw,4.6rem)] font-medium tracking-[0.42em] text-[#D4C4B0]"
+          className="font-display cine-title overflow-hidden whitespace-nowrap text-[clamp(2.2rem,8.2vw,4.8rem)] font-medium tracking-[0.26em] text-[#D4C4B0]"
         >
           EMPIRIQUE
         </h1>

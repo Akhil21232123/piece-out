@@ -52,7 +52,7 @@ export function Empirique() {
   if (!ready) {
     return (
       <main className="grid min-h-dvh place-items-center bg-[#070506]">
-        <p className="font-display text-sm tracking-[0.48em] text-[#A8845C]">EMPIRIQUE</p>
+        <p className="font-display text-sm tracking-[0.32em] text-[#A8845C]">EMPIRIQUE</p>
       </main>
     );
   }

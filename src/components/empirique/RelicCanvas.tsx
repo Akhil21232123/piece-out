@@ -149,8 +149,8 @@ function CavityGlow({ reduced }: { reduced: boolean }) {
 
   useFrame((_, delta) => {
     const p = useChamberStore.getState().progress;
-    const open = reduced ? 0 : smoothstep(0.04, 0.3, p);
-    const dive = reduced ? 0 : smoothstep(0.2, 0.84, p);
+    const open = reduced ? 0 : smoothstep(0.02, 0.26, p);
+    const dive = reduced ? 0 : smoothstep(0.14, 0.98, p);
     const want = 2.2 + open * 8 + dive * 6;
     if (light.current) {
       light.current.intensity = THREE.MathUtils.damp(light.current.intensity, want, 3.2, delta);
@@ -168,18 +168,19 @@ function CameraDive({ reduced }: { reduced: boolean }) {
   useFrame((_, delta) => {
     const cam = camera as THREE.PerspectiveCamera;
     const p = useChamberStore.getState().progress;
-    const open = reduced ? 0 : smoothstep(0.04, 0.3, p);
-    const dive = reduced ? 0 : smoothstep(0.2, 0.84, p);
+    const open = reduced ? 0 : smoothstep(0.02, 0.26, p);
+    const dive = reduced ? 0 : smoothstep(0.14, 0.98, p);
+    const follow = 5.4 + dive * 4.2;
     const y = THREE.MathUtils.lerp(THREE.MathUtils.lerp(0.32, 0.3, open), 0.34, dive);
     const z = THREE.MathUtils.lerp(THREE.MathUtils.lerp(3.55, 2.2, open), 0.52, dive);
-    cam.position.x = THREE.MathUtils.damp(cam.position.x, 0.12 * (1 - dive), 3.6, delta);
-    cam.position.y = THREE.MathUtils.damp(cam.position.y, y, 3.2, delta);
-    cam.position.z = THREE.MathUtils.damp(cam.position.z, z, 2.8, delta);
+    cam.position.x = THREE.MathUtils.damp(cam.position.x, 0.12 * (1 - dive), follow, delta);
+    cam.position.y = THREE.MathUtils.damp(cam.position.y, y, follow, delta);
+    cam.position.z = THREE.MathUtils.damp(cam.position.z, z, follow, delta);
     want.current.set(0, THREE.MathUtils.lerp(0.04, -0.24, dive), THREE.MathUtils.lerp(0, 0.02, dive));
-    look.current.lerp(want.current, 1 - Math.exp(-3.4 * delta));
+    look.current.lerp(want.current, 1 - Math.exp(-5.2 * delta));
     cam.lookAt(look.current);
     const fov = THREE.MathUtils.lerp(32, 52, dive);
-    cam.fov = THREE.MathUtils.damp(cam.fov, fov, 3.1, delta);
+    cam.fov = THREE.MathUtils.damp(cam.fov, fov, follow, delta);
     cam.updateProjectionMatrix();
     const fog = scene.fog as THREE.Fog | null;
     if (fog) {
@@ -203,7 +204,7 @@ function Rig({ reduced, lid }: { reduced: boolean; lid: RefObject<THREE.Group | 
     const group = root.current;
     if (!group) return;
     const { pointer, pulse, progress, objectRevealed } = useChamberStore.getState();
-    const open = reduced ? 0 : smoothstep(0.04, 0.3, progress);
+    const open = reduced ? 0 : smoothstep(0.02, 0.26, progress);
     appear.current = THREE.MathUtils.damp(appear.current, objectRevealed ? 1 : 0, 3.6, delta);
 
     if (pulse !== lastPulse.current) {

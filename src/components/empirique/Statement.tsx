@@ -84,7 +84,8 @@ export function Statement() {
   return (
     <section
       ref={root}
-      className="emp-band relative flex min-h-[78dvh] flex-col items-center justify-center px-6 py-20 md:px-12"
+      id="rule"
+      className="emp-band relative flex min-h-[68dvh] flex-col items-center justify-center px-6 py-16 md:px-12"
     >
       <p ref={kicker} className="text-[10px] uppercase tracking-[0.5em] text-[#A8845C]">
         The rule
