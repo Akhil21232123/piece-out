@@ -11,12 +11,12 @@ export interface Puzzle {
 export const PUZZLES: readonly Puzzle[] = [
   {
     id: "po-01",
-    name: "diet coke",
+    name: "Diet Coke",
     subtitle: "pop art edition",
     slug: "diet-coke-pop-art",
-    blurb: "120 pieces. one hour. hang it or stand it.",
-    pieceCount: 120,
-    art: "/puzzles/diet-coke-pop-art.jpg",
+    blurb: "150 pieces. one hour. hang it or stand it.",
+    pieceCount: 150,
+    art: "/products/diet-coke-puzzle.jpg",
   },
 ] as const;
 

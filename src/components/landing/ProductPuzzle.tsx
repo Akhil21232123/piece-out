@@ -5,10 +5,11 @@ import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { edgesFor, jigPath } from "@/lib/jigsaw";
 import { themeFor } from "@/data/productThemes";
-import { scrollBusy } from "@/lib/scrollPulse";
+import { claimPeel, dropPeel, exclusivePeel, releasePeel } from "@/lib/peelLock";
 import type { Product } from "@/data/products";
 
 gsap.registerPlugin(useGSAP);
+gsap.ticker.lagSmoothing(500, 33);
 
 type Cell = {
   homeX: number;
@@ -57,6 +58,7 @@ export function ProductPuzzle({ product }: { product: Product }) {
       let running = false;
       let visible = false;
       let winOn = false;
+      let wrapOn = false;
       let aimX = -9999;
       let aimY = -9999;
       let cx = 0;
@@ -68,11 +70,14 @@ export function ProductPuzzle({ product }: { product: Product }) {
       let lastH = 0;
       let touchId = -1;
       let shifted: Cell[] = [];
-      const paper = "#efe8dc";
+      let claimed = false;
+      const fit = product.fit === "contain" ? "contain" : "cover";
+
+      wrap.classList.toggle("is-touch", phone);
 
       const sharp = (g: CanvasRenderingContext2D) => {
         g.imageSmoothingEnabled = true;
-        g.imageSmoothingQuality = "high";
+        g.imageSmoothingQuality = "medium";
       };
 
       sharp(ctx);
@@ -122,21 +127,31 @@ export function ProductPuzzle({ product }: { product: Product }) {
         g.restore();
       };
 
+      const drawFitted = (g: CanvasRenderingContext2D, img: CanvasImageSource, dw: number, dh: number) => {
+        const pic = img as CanvasImageSource & {
+          naturalWidth?: number;
+          naturalHeight?: number;
+          width?: number;
+          height?: number;
+        };
+        const iw = Number(pic.naturalWidth || pic.width || 0);
+        const ih = Number(pic.naturalHeight || pic.height || 0);
+        if (!iw || !ih) return;
+        const scale = fit === "contain" ? Math.min(dw / iw, dh / ih) : Math.max(dw / iw, dh / ih);
+        const rw = iw * scale;
+        const rh = ih * scale;
+        g.drawImage(img, (dw - rw) / 2, (dh - rh) / 2, rw, rh);
+      };
+
       const rasterPhoto = () => {
         photoLayer.width = canvas.width;
         photoLayer.height = canvas.height;
         sharp(photoLayerCtx);
-        photoLayerCtx.setTransform(1, 0, 0, 1, 0, 0);
+        photoLayerCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
         photoLayerCtx.clearRect(0, 0, photoLayer.width, photoLayer.height);
-        photoLayerCtx.drawImage(photo, 0, 0, photoLayer.width, photoLayer.height);
-      };
-
-      const punch = (g: CanvasRenderingContext2D, cell: Cell) => {
-        g.save();
-        g.translate(cell.homeX, cell.homeY);
-        g.fillStyle = paper;
-        g.fill(cell.path);
-        g.restore();
+        const shot = host?.querySelector("img");
+        const src = shot && shot.complete && shot.naturalWidth ? shot : photo;
+        drawFitted(photoLayerCtx, src, width, height);
       };
 
       const around = (px: number, py: number, radius: number) => {
@@ -163,25 +178,43 @@ export function ProductPuzzle({ product }: { product: Product }) {
           cell.rot = 0;
         }
         shifted = [];
+        energy = 0;
         clear();
         live(false);
         running = false;
         gsap.ticker.remove(tick);
+        if (claimed) {
+          claimed = false;
+          dropPeel(onStolen);
+          releasePeel();
+        }
       };
 
-      const layout = () => {
+      const onStolen = () => {
+        touchId = -1;
+        energy = 0.18;
+      };
+
+      const layout = (force = false) => {
         if (!visible) return;
         const rect = wrap.getBoundingClientRect();
         const w = Math.max(1, rect.width);
         const h = Math.max(1, rect.height);
         if (w < 8 || h < 8) return;
-        if (ready && bakedPhoto === photoOk && Math.abs(w - lastW) < 0.5 && Math.abs(h - lastH) < 0.5) {
+        if (running && !force) return;
+        if (
+          !force &&
+          ready &&
+          bakedPhoto === photoOk &&
+          Math.abs(w - lastW) < 2 &&
+          Math.abs(h - lastH) < 2
+        ) {
           if (!running) clear();
           return;
         }
         lastW = w;
         lastH = h;
-        dpr = Math.min(3, window.devicePixelRatio || 1);
+        dpr = Math.min(phone ? 1.5 : 2, window.devicePixelRatio || 1);
         width = w;
         height = h;
         canvas.width = Math.max(1, Math.round(w * dpr));
@@ -191,8 +224,8 @@ export function ProductPuzzle({ product }: { product: Product }) {
         sharp(ctx);
         if (photoOk) rasterPhoto();
 
-        const cap = phone ? 240 : 300;
-        const target = phone ? 20 : 22;
+        const cap = phone ? 120 : 160;
+        const target = phone ? 28 : 26;
         cols = Math.max(8, Math.round(w / target));
         rows = Math.max(8, Math.round(h / target));
         while (cols * rows > cap && (cols > 8 || rows > 8)) {
@@ -282,20 +315,24 @@ export function ProductPuzzle({ product }: { product: Product }) {
         ctx.save();
         clipPhoto();
         sharp(ctx);
-        for (const cell of shifted) punch(ctx, cell);
         for (const cell of shifted) paintCell(ctx, cell, cell.rot);
         ctx.restore();
       };
 
       const start = () => {
-        if (reduced || running) return;
+        if (reduced) return;
+        exclusivePeel(onStolen);
+        if (running) return;
         running = true;
+        if (!claimed) {
+          claimed = true;
+          claimPeel();
+        }
         live(true);
         gsap.ticker.add(tick);
       };
 
       const aim = (clientX: number, clientY: number, kick: number) => {
-        if (scrollBusy()) return;
         const rect = canvas.getBoundingClientRect();
         aimX = clientX - rect.left;
         aimY = clientY - rect.top;
@@ -313,11 +350,12 @@ export function ProductPuzzle({ product }: { product: Product }) {
         );
       };
 
+      const hoverish = (type: string) => type === "mouse" || type === "pen";
       const safe = contextSafe ?? ((fn: (e: PointerEvent) => void) => fn);
 
       const onMove = safe((e: PointerEvent) => {
-        if (!ready) return;
-        if (e.pointerType === "mouse") {
+        if (!ready || !visible) return;
+        if (hoverish(e.pointerType)) {
           if (!localIn(e.clientX, e.clientY)) {
             energy = Math.min(energy, 0.22);
             return;
@@ -325,26 +363,60 @@ export function ProductPuzzle({ product }: { product: Product }) {
           aim(e.clientX, e.clientY, 1.05);
           return;
         }
-        if (e.pointerId !== touchId) return;
-        if (!localIn(e.clientX, e.clientY) || scrollBusy()) return;
+        if (touchId >= 0 && e.pointerId !== touchId) return;
+        if (!localIn(e.clientX, e.clientY)) {
+          energy = Math.min(energy, 0.22);
+          return;
+        }
         aim(e.clientX, e.clientY, 1.12);
       });
 
       const onDown = safe((e: PointerEvent) => {
-        if (!ready || e.button !== 0) return;
-        if (e.pointerType === "mouse") {
-          if (!localIn(e.clientX, e.clientY)) return;
-          aim(e.clientX, e.clientY, 1.15);
-          return;
-        }
+        if (!visible) return;
+        if (!ready) layout(true);
+        if (!ready) return;
+        if (hoverish(e.pointerType) && e.button !== 0) return;
         if (!localIn(e.clientX, e.clientY)) return;
-        touchId = e.pointerId;
+        if (!hoverish(e.pointerType)) {
+          touchId = e.pointerId;
+          try {
+            wrap.setPointerCapture(e.pointerId);
+          } catch {
+            /* safari */
+          }
+        }
         aim(e.clientX, e.clientY, 1.15);
       });
 
       const onUp = safe((e: PointerEvent) => {
         if (e.pointerId === touchId) touchId = -1;
       });
+
+      const onTouchStart = (e: TouchEvent) => {
+        if (!visible || reduced) return;
+        if (!ready) layout(true);
+        if (!ready) return;
+        const t = e.touches[0];
+        if (!t || !localIn(t.clientX, t.clientY)) return;
+        touchId = t.identifier;
+        aim(t.clientX, t.clientY, 1.15);
+      };
+
+      const onTouchMove = (e: TouchEvent) => {
+        if (!ready || !visible) return;
+        const t = [...e.touches].find((n) => n.identifier === touchId) ?? e.touches[0];
+        if (!t) return;
+        if (!localIn(t.clientX, t.clientY)) {
+          energy = Math.min(energy, 0.22);
+          return;
+        }
+        aim(t.clientX, t.clientY, 1.12);
+      };
+
+      const onTouchEnd = (e: TouchEvent) => {
+        if (touchId >= 0 && [...e.touches].some((n) => n.identifier === touchId)) return;
+        touchId = -1;
+      };
 
       const bindWin = () => {
         if (winOn) return;
@@ -364,21 +436,49 @@ export function ProductPuzzle({ product }: { product: Product }) {
         window.removeEventListener("pointercancel", onUp);
       };
 
+      const bindWrap = () => {
+        if (wrapOn) return;
+        wrapOn = true;
+        wrap.addEventListener("pointerdown", onDown, { passive: true });
+        wrap.addEventListener("pointermove", onMove, { passive: true });
+        wrap.addEventListener("pointerup", onUp, { passive: true });
+        wrap.addEventListener("touchstart", onTouchStart, { passive: true });
+        wrap.addEventListener("touchmove", onTouchMove, { passive: true });
+        wrap.addEventListener("touchend", onTouchEnd, { passive: true });
+      };
+
+      const unbindWrap = () => {
+        if (!wrapOn) return;
+        wrapOn = false;
+        wrap.removeEventListener("pointerdown", onDown);
+        wrap.removeEventListener("pointermove", onMove);
+        wrap.removeEventListener("pointerup", onUp);
+        wrap.removeEventListener("touchstart", onTouchStart);
+        wrap.removeEventListener("touchmove", onTouchMove);
+        wrap.removeEventListener("touchend", onTouchEnd);
+      };
+
       const inView = () => {
         const r = wrap.getBoundingClientRect();
         return r.bottom > -80 && r.top < window.innerHeight + 80;
       };
       visible = inView();
-      if (visible) layout();
+      if (visible) {
+        if (!phone) layout();
+        if (phone) bindWrap();
+        else bindWin();
+      }
 
       const io = new IntersectionObserver(
         (entries) => {
           visible = entries.some((entry) => entry.isIntersecting);
           if (visible) {
-            layout();
-            bindWin();
+            if (!phone) layout();
+            if (phone) bindWrap();
+            else bindWin();
           } else {
             unbindWin();
+            unbindWrap();
             touchId = -1;
             if (running) rest();
           }
@@ -386,38 +486,45 @@ export function ProductPuzzle({ product }: { product: Product }) {
         { rootMargin: "80px" },
       );
       io.observe(wrap);
-      if (visible) bindWin();
 
       const ro = new ResizeObserver(() => {
-        if (visible) layout();
+        if (!visible) return;
+        if (phone && !ready) return;
+        layout();
       });
       ro.observe(wrap);
 
       const onPhoto = () => {
         photoOk = true;
-        if (visible) layout();
+        if (!visible || (phone && !ready)) return;
+        if (running) {
+          rasterPhoto();
+          bakedPhoto = true;
+          return;
+        }
+        layout(true);
       };
       photo.addEventListener("load", onPhoto);
       if (photo.complete && photo.naturalWidth) onPhoto();
-
-      host?.addEventListener("pointerdown", onDown as EventListener, { passive: true });
-      host?.addEventListener("pointerup", onUp as EventListener, { passive: true });
-      host?.addEventListener("pointercancel", onUp as EventListener, { passive: true });
 
       return () => {
         photo.removeEventListener("load", onPhoto);
         photo.src = "";
         live(false);
         unbindWin();
+        unbindWrap();
         io.disconnect();
         ro.disconnect();
         gsap.ticker.remove(tick);
-        host?.removeEventListener("pointerdown", onDown as EventListener);
-        host?.removeEventListener("pointerup", onUp as EventListener);
-        host?.removeEventListener("pointercancel", onUp as EventListener);
+        wrap.classList.remove("is-touch", "is-live");
+        if (claimed) {
+          claimed = false;
+          dropPeel(onStolen);
+          releasePeel();
+        }
       };
     },
-    { scope: wrapRef, dependencies: [product.id, product.image], revertOnUpdate: true },
+    { scope: wrapRef, dependencies: [product.id, product.image, product.printedGrid, product.fit], revertOnUpdate: true },
   );
 
   return (

@@ -25,6 +25,21 @@ export function mysqlPool(): mysql.Pool | null {
   return pool;
 }
 
+export async function ensureMysqlRestock(db: mysql.Pool) {
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS restock_alerts (
+      id VARCHAR(40) PRIMARY KEY,
+      created_at DATETIME NOT NULL,
+      name VARCHAR(120) NOT NULL,
+      phone VARCHAR(20) NOT NULL,
+      product_id VARCHAR(40) NOT NULL,
+      product_name VARCHAR(160) NOT NULL,
+      UNIQUE KEY restock_alerts_phone_product (phone, product_id),
+      KEY restock_alerts_created_at (created_at)
+    )
+  `);
+}
+
 export async function ensureMysqlSchema(db: mysql.Pool) {
   if (ready) return;
   await db.query(`
@@ -42,6 +57,10 @@ export async function ensureMysqlSchema(db: mysql.Pool) {
       payment_id VARCHAR(64) NULL,
       razorpay_order_id VARCHAR(64) NULL,
       failure_reason TEXT NULL,
+      captured_at DATETIME NULL,
+      settled_at DATETIME NULL,
+      settlement_id VARCHAR(64) NULL,
+      settlement_utr VARCHAR(64) NULL,
       UNIQUE KEY shop_orders_rzp (razorpay_order_id),
       KEY shop_orders_created_at (created_at)
     )
@@ -51,5 +70,36 @@ export async function ensureMysqlSchema(db: mysql.Pool) {
   } catch {
     /* already present */
   }
+  for (const sql of [
+    "ALTER TABLE shop_orders ADD COLUMN captured_at DATETIME NULL",
+    "ALTER TABLE shop_orders ADD COLUMN settled_at DATETIME NULL",
+    "ALTER TABLE shop_orders ADD COLUMN settlement_id VARCHAR(64) NULL",
+    "ALTER TABLE shop_orders ADD COLUMN settlement_utr VARCHAR(64) NULL",
+    "ALTER TABLE shop_orders ADD COLUMN verified_at DATETIME NULL",
+    "ALTER TABLE shop_orders ADD COLUMN payment_method VARCHAR(32) NULL",
+    "ALTER TABLE shop_orders ADD COLUMN payment_vpa VARCHAR(80) NULL",
+    "ALTER TABLE shop_orders ADD COLUMN razorpay_amount INT NULL",
+    "ALTER TABLE shop_orders ADD COLUMN subtotal INT NULL",
+    "ALTER TABLE shop_orders ADD COLUMN gst INT NULL",
+    "ALTER TABLE shop_orders ADD COLUMN shipping_fee INT NULL",
+    "ALTER TABLE shop_orders ADD COLUMN pincode VARCHAR(8) NULL",
+    "ALTER TABLE shop_orders ADD COLUMN city VARCHAR(80) NULL",
+    "ALTER TABLE shop_orders ADD COLUMN state VARCHAR(80) NULL",
+    "ALTER TABLE shop_orders ADD COLUMN shipping_partner VARCHAR(80) NULL",
+    "ALTER TABLE shop_orders ADD COLUMN awb VARCHAR(40) NULL",
+    "ALTER TABLE shop_orders ADD COLUMN shiprocket_order_id VARCHAR(64) NULL",
+    "ALTER TABLE shop_orders ADD COLUMN shiprocket_shipment_id VARCHAR(64) NULL",
+    "ALTER TABLE shop_orders ADD COLUMN tracking_url VARCHAR(240) NULL",
+    "ALTER TABLE shop_orders ADD COLUMN shipped_at DATETIME NULL",
+    "ALTER TABLE shop_orders ADD COLUMN shipping_error TEXT NULL",
+    "ALTER TABLE shop_orders ADD COLUMN shopify_order_id VARCHAR(64) NULL",
+  ]) {
+    try {
+      await db.query(sql);
+    } catch {
+      /* already present */
+    }
+  }
+  await ensureMysqlRestock(db);
   ready = true;
 }

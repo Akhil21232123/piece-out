@@ -1,7 +1,7 @@
 "use client";
 
 import { create } from "zustand";
-import { priceFor } from "@/lib/brand";
+import { gstOn, priceFor } from "@/lib/brand";
 
 export type CartLine = {
   id: string;
@@ -12,6 +12,7 @@ export type CartLine = {
   withFrame: boolean;
   unitPrice: number;
   qty: number;
+  merchandiseId?: string;
 };
 
 type AddPayload = {
@@ -20,6 +21,8 @@ type AddPayload = {
   image: string;
   line: string;
   withFrame: boolean;
+  unitPrice?: number;
+  merchandiseId?: string;
 };
 
 type CartState = {
@@ -35,12 +38,19 @@ export const useCartStore = create<CartState>((set) => ({
   add: (item) =>
     set((state) => {
       const id = `${item.productId}-${item.withFrame ? "frame" : "bare"}`;
-      const unitPrice = priceFor(item.withFrame);
+      const unitPrice = item.unitPrice ?? priceFor(item.withFrame);
       const existing = state.lines.find((line) => line.id === id);
       if (existing) {
         return {
           lines: state.lines.map((line) =>
-            line.id === id ? { ...line, qty: line.qty + 1 } : line,
+            line.id === id
+              ? {
+                  ...line,
+                  qty: Math.min(9, line.qty + 1),
+                  unitPrice,
+                  merchandiseId: item.merchandiseId ?? line.merchandiseId,
+                }
+              : line,
           ),
         };
       }
@@ -56,6 +66,7 @@ export const useCartStore = create<CartState>((set) => ({
             withFrame: item.withFrame,
             unitPrice,
             qty: 1,
+            merchandiseId: item.merchandiseId,
           },
         ],
       };
@@ -63,7 +74,7 @@ export const useCartStore = create<CartState>((set) => ({
   inc: (id) =>
     set((state) => ({
       lines: state.lines.map((line) =>
-        line.id === id ? { ...line, qty: line.qty + 1 } : line,
+        line.id === id ? { ...line, qty: Math.min(9, line.qty + 1) } : line,
       ),
     })),
   dec: (id) =>
@@ -79,6 +90,14 @@ export function cartCount(lines: CartLine[]): number {
   return lines.reduce((sum, line) => sum + line.qty, 0);
 }
 
-export function cartTotal(lines: CartLine[]): number {
+export function cartSubtotal(lines: CartLine[]): number {
   return lines.reduce((sum, line) => sum + line.unitPrice * line.qty, 0);
+}
+
+export function cartGst(lines: CartLine[]): number {
+  return gstOn(cartSubtotal(lines));
+}
+
+export function cartTotal(lines: CartLine[]): number {
+  return cartSubtotal(lines);
 }

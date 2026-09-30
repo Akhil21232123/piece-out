@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import gsap from "gsap";
-import { cartCount, cartTotal, useCartStore } from "@/store/cartStore";
+import { cartCount, cartSubtotal, useCartStore } from "@/store/cartStore";
 import { formatInr } from "@/lib/brand";
 import { PuzzlizeButton } from "./PuzzlizeButton";
 
@@ -17,20 +17,23 @@ export function CartBar({
   const bagRef = useRef<HTMLDivElement>(null);
   const lines = useCartStore((state) => state.lines);
   const count = cartCount(lines);
-  const total = cartTotal(lines);
+  const subtotal = cartSubtotal(lines);
 
   useEffect(() => {
-    const onPulse = () => {
+    const onCatch = () => {
       const bag = bagRef.current;
       if (!bag) return;
-      gsap.fromTo(
-        bag,
-        { scale: 1 },
-        { scale: 1.05, duration: 0.16, yoyo: true, repeat: 1, ease: "power2.out", overwrite: true },
-      );
+      gsap
+        .timeline({ overwrite: true })
+        .fromTo(bag, { scale: 1 }, { scale: 1.1, duration: 0.14, ease: "back.out(3)" })
+        .to(bag, { scale: 1, duration: 0.42, ease: "elastic.out(1, 0.55)" });
     };
-    window.addEventListener("po-cart-pulse", onPulse);
-    return () => window.removeEventListener("po-cart-pulse", onPulse);
+    window.addEventListener("po-cart-catch", onCatch);
+    window.addEventListener("po-cart-pulse", onCatch);
+    return () => {
+      window.removeEventListener("po-cart-catch", onCatch);
+      window.removeEventListener("po-cart-pulse", onCatch);
+    };
   }, [count]);
 
   return (
@@ -50,9 +53,9 @@ export function CartBar({
           >
             <div className="pl-3 text-[#fffaf3]">
               <p className="text-sm font-extrabold">
-                {count} {count === 1 ? "puzzle" : "puzzles"}
+                {count} {count === 1 ? "Product" : "Products"}
               </p>
-              <p className="text-xs text-[#c8c0b4]">{formatInr(total)}</p>
+              <p className="text-xs text-[#c8c0b4]">{formatInr(subtotal)}</p>
             </div>
             <PuzzlizeButton
               onClick={onCheckout}

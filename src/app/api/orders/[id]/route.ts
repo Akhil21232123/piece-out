@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { adminPassword, cookieMatches, emailOrder, getOrder, updateOrder } from "@/lib/orders";
+import { syncOrderFromRazorpay } from "@/lib/reconcile";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -11,9 +12,17 @@ const LIVE_HEADERS = {
 
 export async function GET(_request: Request, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params;
-  const order = await getOrder(id);
+  let order = await getOrder(id);
   if (!order) {
     return NextResponse.json({ error: "Order not found." }, { status: 404, headers: LIVE_HEADERS });
+  }
+  if (order.status === "pending" && order.razorpayOrderId) {
+    try {
+      order = await syncOrderFromRazorpay(order);
+    } catch {
+      /* return stored status */
+    }
+    order = (await getOrder(id)) ?? order;
   }
   return NextResponse.json(
     {
@@ -43,8 +52,8 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   }
 
   const status = (body as { status?: string }).status;
-  if (status !== "paid" && status !== "failed") {
-    return NextResponse.json({ error: "Invalid status." }, { status: 400 });
+  if (status !== "failed") {
+    return NextResponse.json({ error: "Staff can only mark failed. Paid requires a Razorpay capture." }, { status: 400 });
   }
 
   const current = await getOrder(id);
@@ -53,8 +62,8 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   }
 
   const next = await updateOrder(id, {
-    status,
-    failureReason: status === "failed" ? "Marked failed by staff" : "",
+    status: "failed",
+    failureReason: "Marked failed by staff",
   });
   if (next && current.status !== next.status) {
     try {
@@ -63,6 +72,5 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       /* dashboard still updates */
     }
   }
-  return NextResponse.json({ id, status: next?.status ?? status });
+  return NextResponse.json({ id, status: next?.status ?? "failed" });
 }
-

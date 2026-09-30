@@ -5,6 +5,12 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   images: {
     qualities: [75, 90, 100],
+    remotePatterns: [
+      { protocol: "https", hostname: "cdn.shopify.com", pathname: "/**" },
+    ],
+  },
+  async redirects() {
+    return [{ source: "/how", destination: "/", permanent: true }];
   },
 };
 

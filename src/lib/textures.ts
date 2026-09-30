@@ -105,7 +105,7 @@ function drawYellowWaves(ctx: CanvasRenderingContext2D, w: number, h: number) {
 
 const FONT = "Outfit, Arial Black, Helvetica Neue, sans-serif";
 
-/** Upper sleeve: piece/out lockup, tagline, 120 pcs badge. */
+/** Upper sleeve: piece/out lockup, tagline, 150 pcs badge. */
 export function createUpperLabel(): THREE.CanvasTexture {
   const w = 2048;
   const h = 640;
@@ -130,7 +130,7 @@ export function createUpperLabel(): THREE.CanvasTexture {
   ctx.fillStyle = "#111111";
   ctx.font = `800 34px ${FONT}`;
   ctx.textAlign = "center";
-  ctx.fillText("120 pieces", cx + 434, 220);
+  ctx.fillText("150 pieces", cx + 434, 220);
   ctx.font = `500 20px ${FONT}`;
   ctx.fillStyle = "#444";
   ctx.fillText("1 hour of your time", cx + 434, 252);

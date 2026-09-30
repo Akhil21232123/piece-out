@@ -11,6 +11,11 @@ const BRAND: ProductTheme = {
 };
 
 export const PRODUCT_THEMES: Record<string, ProductTheme> = {
+  "po-drop": {
+    paper: "#efe8dc",
+    stroke: "rgba(23,20,17,0.14)",
+    pieces: ["#171411", "#e31b23", "#fffaf3", "#c41e3a", "#d8d0c4"],
+  },
   "po-10": {
     paper: "#f3ead4",
     stroke: "rgba(80,40,20,0.32)",
@@ -31,6 +36,11 @@ export const PRODUCT_THEMES: Record<string, ProductTheme> = {
     stroke: "rgba(23,20,17,0.12)",
     pieces: ["#1d4ed8", "#f5c400", "#e31b23", "#f8f8f8", "#111111"],
   },
+  "po-20": {
+    paper: "#e8eef8",
+    stroke: "rgba(24,48,96,0.16)",
+    pieces: ["#1d4ed8", "#0b1f4a", "#f8f8f8", "#e31b23", "#7aa2d4"],
+  },
   "po-14": {
     paper: "#f6e6d8",
     stroke: "rgba(90,20,12,0.18)",
@@ -42,12 +52,27 @@ export const PRODUCT_THEMES: Record<string, ProductTheme> = {
     pieces: ["#c12222", "#f2a0a0", "#3d6b3a", "#fff6f0", "#7a2e2e"],
   },
   "po-16": {
-    paper: "#f7e8ee",
-    stroke: "rgba(90,16,32,0.18)",
-    pieces: ["#e31b23", "#f3b9c8", "#9b2242", "#fffaf3", "#171411"],
+    paper: "#efe8dc",
+    stroke: "rgba(23,20,17,0.14)",
+    pieces: ["#9b2242", "#e8c4c8", "#171411", "#fffaf3", "#c41e3a"],
+  },
+  "po-17": {
+    paper: "#f3eee4",
+    stroke: "rgba(40,50,40,0.16)",
+    pieces: ["#c45c78", "#3d6b4a", "#6b8fb8", "#e8d5a3", "#fffaf3"],
+  },
+  "po-18": {
+    paper: "#f4f0ea",
+    stroke: "rgba(80,16,16,0.16)",
+    pieces: ["#c41e3a", "#171411", "#fffaf3", "#e31b23", "#d8d0c4"],
+  },
+  "po-19": {
+    paper: "#efe8d4",
+    stroke: "rgba(60,50,20,0.16)",
+    pieces: ["#c9a227", "#5c6b32", "#d4b84a", "#fffaf3", "#3d4a24"],
   },
   "po-01": {
-    paper: "#ececec",
+    paper: "#efe8dc",
     stroke: "rgba(20,20,20,0.16)",
     pieces: ["#c8102e", "#111111", "#c0c0c0", "#ffffff", "#6b6b6b"],
   },
@@ -94,5 +119,6 @@ export const PRODUCT_THEMES: Record<string, ProductTheme> = {
 };
 
 export function themeFor(id: string): ProductTheme {
-  return PRODUCT_THEMES[id] ?? BRAND;
+  const theme = PRODUCT_THEMES[id] ?? BRAND;
+  return { ...theme, stroke: "rgba(23,20,17,0.14)" };
 }

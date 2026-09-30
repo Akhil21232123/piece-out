@@ -19,17 +19,39 @@ export function edgesFor(col: number, row: number, cols: number, rows: number): 
   return { n: north, e: east, s: south, w: west };
 }
 
+function tabSize(width: number, height: number) {
+  const span = Math.min(width, height);
+  return { tab: span * 0.23, neck: span * 0.145 };
+}
+
 export function jigPath(width: number, edges: PieceEdges, height = width): Path2D {
   const path = new Path2D();
-  const span = Math.min(width, height);
-  const tab = span * 0.23;
-  const neck = span * 0.145;
+  const { tab, neck } = tabSize(width, height);
   path.moveTo(0, 0);
   bump(path, 0, 0, width, 0, edges.n, tab, neck);
   bump(path, width, 0, width, height, edges.e, tab, neck);
   bump(path, width, height, 0, height, edges.s, tab, neck);
   bump(path, 0, height, 0, 0, edges.w, tab, neck);
   path.closePath();
+  return path;
+}
+
+/** Unique seams only: east + south of every cell, plus the outer north/west rim. */
+export function jigSeams(width: number, edges: PieceEdges, height: number, col: number, row: number): Path2D {
+  const path = new Path2D();
+  const { tab, neck } = tabSize(width, height);
+  if (row === 0) {
+    path.moveTo(0, 0);
+    bump(path, 0, 0, width, 0, edges.n, tab, neck);
+  }
+  path.moveTo(width, 0);
+  bump(path, width, 0, width, height, edges.e, tab, neck);
+  path.moveTo(width, height);
+  bump(path, width, height, 0, height, edges.s, tab, neck);
+  if (col === 0) {
+    path.moveTo(0, height);
+    bump(path, 0, height, 0, 0, edges.w, tab, neck);
+  }
   return path;
 }
 
