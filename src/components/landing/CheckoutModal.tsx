@@ -80,16 +80,68 @@ function CheckoutDialog({ onClose }: { onClose: () => void }) {
   const [payReady, setPayReady] = useState(true);
   const [waitApp, setWaitApp] = useState<PayVia>("gpay");
   const watchRef = useRef<(() => void) | null>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+    const html = document.documentElement;
+    const body = document.body;
+    const scrollY = window.scrollY;
+    const prevHtmlOverflow = html.style.overflow;
+    const prevHtmlOverscroll = html.style.overscrollBehavior;
+    const prevBodyOverflow = body.style.overflow;
+    const prevBodyPosition = body.style.position;
+    const prevBodyTop = body.style.top;
+    const prevBodyLeft = body.style.left;
+    const prevBodyRight = body.style.right;
+    const prevBodyWidth = body.style.width;
+    html.style.overflow = "hidden";
+    html.style.overscrollBehavior = "none";
+    body.style.overflow = "hidden";
+    body.style.position = "fixed";
+    body.style.top = `-${scrollY}px`;
+    body.style.left = "0";
+    body.style.right = "0";
+    body.style.width = "100%";
+
+    const allowInsideCheckout = (target: EventTarget | null) => {
+      const root = dialogRef.current;
+      return Boolean(root && target instanceof Node && root.contains(target));
     };
+
+    const onWheel = (event: WheelEvent) => {
+      const root = dialogRef.current;
+      if (!root || !allowInsideCheckout(event.target)) {
+        event.preventDefault();
+        return;
+      }
+      const top = root.scrollTop <= 0 && event.deltaY < 0;
+      const bottom = root.scrollTop + root.clientHeight >= root.scrollHeight - 1 && event.deltaY > 0;
+      if (top || bottom) event.preventDefault();
+    };
+
+    const onTouchMove = (event: TouchEvent) => {
+      if (!allowInsideCheckout(event.target)) event.preventDefault();
+    };
+
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+
+    window.addEventListener("wheel", onWheel, { passive: false });
+    window.addEventListener("touchmove", onTouchMove, { passive: false });
     window.addEventListener("keydown", onKey);
     return () => {
-      document.body.style.overflow = prev;
+      html.style.overflow = prevHtmlOverflow;
+      html.style.overscrollBehavior = prevHtmlOverscroll;
+      body.style.overflow = prevBodyOverflow;
+      body.style.position = prevBodyPosition;
+      body.style.top = prevBodyTop;
+      body.style.left = prevBodyLeft;
+      body.style.right = prevBodyRight;
+      body.style.width = prevBodyWidth;
+      window.scrollTo(0, scrollY);
+      window.removeEventListener("wheel", onWheel);
+      window.removeEventListener("touchmove", onTouchMove);
       window.removeEventListener("keydown", onKey);
       watchRef.current?.();
     };
@@ -375,13 +427,14 @@ function CheckoutDialog({ onClose }: { onClose: () => void }) {
 
   return (
     <motion.div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-[#171411]/50 p-0 md:items-center md:p-6"
+      className="fixed inset-0 z-50 flex items-end justify-center overflow-hidden overscroll-none bg-[#171411]/50 p-0 md:items-center md:p-6"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       onClick={onClose}
     >
       <motion.div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="checkout-title"
@@ -390,7 +443,7 @@ function CheckoutDialog({ onClose }: { onClose: () => void }) {
         exit={{ y: 24, opacity: 0, scale: 0.98 }}
         transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
         onClick={(event) => event.stopPropagation()}
-        className="relative z-10 max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-[1.6rem] border border-[#171411]/10 bg-[#fffaf3] p-6 shadow-2xl md:rounded-[1.6rem] md:p-8"
+        className="relative z-10 max-h-[92vh] w-full max-w-lg overflow-y-auto overscroll-contain rounded-t-[1.6rem] border border-[#171411]/10 bg-[#fffaf3] p-6 shadow-2xl md:rounded-[1.6rem] md:p-8"
       >
         <div className="flex items-start justify-between gap-4">
           <div>
