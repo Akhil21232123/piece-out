@@ -358,12 +358,17 @@ export function ProductCard({
                 {formatInr(price)}
               </span>
             ) : (
-              <DealPrice
-                withFrame={withFrame}
-                amount={price}
-                compare={productCompare(product, withFrame)}
-                className="text-lg text-[#171411]"
-              />
+              <>
+                <DealPrice
+                  withFrame={withFrame}
+                  amount={price}
+                  compare={productCompare(product, withFrame)}
+                  className="text-lg text-[#171411]"
+                />
+                <span className="mt-0.5 block text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#7a7268]">
+                  free shipping
+                </span>
+              </>
             )}
           </p>
         </div>

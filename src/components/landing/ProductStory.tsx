@@ -282,7 +282,7 @@ function StoryDialog({
             </div>
 
             <p className="mt-2 text-xs font-extrabold uppercase tracking-[0.12em] text-[#7a7268]">
-              {BRAND.pieces} pieces · 1 hour
+              {BRAND.pieces} pieces · 1 hour · free shipping
             </p>
 
             <p className="mt-3 text-[15px] leading-relaxed text-[#5e574e] md:text-base">

@@ -55,7 +55,7 @@ export function CartBar({
               <p className="text-sm font-extrabold">
                 {count} {count === 1 ? "Product" : "Products"}
               </p>
-              <p className="text-xs text-[#c8c0b4]">{formatInr(subtotal)}</p>
+              <p className="text-xs text-[#c8c0b4]">{formatInr(subtotal)} · free shipping</p>
             </div>
             <PuzzlizeButton
               onClick={onCheckout}

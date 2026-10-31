@@ -5,6 +5,7 @@ import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { BRAND } from "@/lib/brand";
 import { DealPrice } from "@/components/brand/DealPrice";
+import { FreeShipping } from "@/components/brand/FreeShipping";
 import { HeroPlay } from "./HeroPlay";
 
 gsap.registerPlugin(useGSAP);
@@ -157,9 +158,7 @@ export function HowItWorks() {
                 <DealPrice withFrame compact className="items-baseline" />
               </span>
             </span>
-            <span className="mt-0.5 block text-[11px] font-semibold tracking-wide text-[#7a7268]">
-              ships with Delhivery
-            </span>
+            <FreeShipping className="mt-2" />
           </p>
         </div>
         <HeroPlay />

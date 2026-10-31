@@ -17,6 +17,8 @@ export const BRAND = {
 
 export const SHIPPING = {
   days: "3–5 days",
+  /** Free delivery on every order. Flip to false to bring back the Delhivery rate at checkout. */
+  free: true,
 } as const;
 
 export const COLOR = {

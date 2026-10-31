@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { randomInt } from "crypto";
-import { makeOrderId, parcelWeightG, payableOf } from "@/lib/brand";
+import { makeOrderId, parcelWeightG, payableOf, SHIPPING } from "@/lib/brand";
 import {
   DROP_ID,
   inStockEditionsFrom,
@@ -144,7 +144,7 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
-  const shipping = await quoteDelhiveryCharge(pincode, parcelWeightG(items));
+  const shipping = SHIPPING.free ? 0 : await quoteDelhiveryCharge(pincode, parcelWeightG(items));
   const { gst, total } = payableOf(subtotal, shipping);
   const id = makeOrderId();
 
