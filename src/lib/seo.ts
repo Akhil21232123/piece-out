@@ -20,7 +20,7 @@ export const TITLE =
   "pieceout | Premium Collection Puzzles in a Can — Limited Drops by piece/out";
 
 export const DESCRIPTION =
-  "pieceout is a premium collection-based puzzle brand. Each piece/out drop is a limited art collection sealed in a can: 150 interlocking pieces, one hour off the algorithm, then a framed object you hang. Shop from ₹799, or ₹899 framed. Free shipping across India.";
+  "pieceout is a premium collection-based puzzle brand. Each piece/out drop is a limited art collection sealed in a can: 150 interlocking pieces, one hour off the algorithm, then a framed object you hang. Shop from ₹" + BRAND.priceBare + ", or ₹" + BRAND.priceFrame + " framed. Free shipping across India.";
 
 export const KEYWORDS = [
   "pieceout",
