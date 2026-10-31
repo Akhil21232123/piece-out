@@ -324,6 +324,11 @@ export function ProductCard({
                 <div ref={glassRef} className={`glass-pane ${withFrame ? "is-on" : ""}`} aria-hidden>
                   <span className="glass-glow" />
                 </div>
+                {product.isNew && !soldOut ? (
+                  <span className="pointer-events-none absolute left-3 top-3 z-[3] -rotate-3 rounded-full bg-[#e31b23] px-3 py-1 text-[11px] font-extrabold uppercase leading-none tracking-[0.2em] text-[#fffaf3] shadow-[0_6px_16px_rgb(227_27_35_/_0.35)]">
+                    new
+                  </span>
+                ) : null}
                 {soldOut ? (
                   <>
                     <div className="sold-out-veil" aria-hidden />
@@ -358,17 +363,12 @@ export function ProductCard({
                 {formatInr(price)}
               </span>
             ) : (
-              <>
-                <DealPrice
-                  withFrame={withFrame}
-                  amount={price}
-                  compare={productCompare(product, withFrame)}
-                  className="text-lg text-[#171411]"
-                />
-                <span className="mt-0.5 block text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#7a7268]">
-                  free shipping
-                </span>
-              </>
+              <DealPrice
+                withFrame={withFrame}
+                amount={price}
+                compare={productCompare(product, withFrame)}
+                className="text-lg text-[#171411]"
+              />
             )}
           </p>
         </div>

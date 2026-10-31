@@ -193,6 +193,7 @@ function mapRemote(node: ShopifyProductNode): Product {
     printedGrid: local?.printedGrid,
     fit: local?.fit,
     soldOut: local?.soldOut || soldOut,
+    isNew: local?.isNew,
     priceBare: money(bare?.price) ?? local?.priceBare,
     priceFrame: money(frame?.price) ?? local?.priceBare ?? money(bare?.price),
     compareBare: money(bare?.compareAtPrice) ?? local?.compareBare,

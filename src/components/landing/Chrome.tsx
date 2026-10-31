@@ -5,13 +5,12 @@ import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { DealPrice } from "@/components/brand/DealPrice";
-import { FreeShipping } from "@/components/brand/FreeShipping";
 import { Logo } from "@/components/brand/Logo";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
 export function Marquee() {
-  const line = "pop it  ·  lock in  ·  150 pieces  ·  1 hour  ·  hang it  ·  free shipping  ·  ";
+  const line = "pop it  ·  lock in  ·  150 pieces  ·  1 hour  ·  hang it  ·  ";
   return (
     <div className="overflow-hidden border-y border-[#171411]/10 bg-[#f5c400] py-3 text-[#171411]" suppressHydrationWarning>
       <div className="flex w-max animate-marquee">
@@ -74,9 +73,6 @@ export function Footer() {
               framed
               <DealPrice withFrame compact />
             </span>
-          </span>
-          <span className="mt-2 flex justify-start md:justify-end">
-            <FreeShipping />
           </span>
         </p>
       </div>

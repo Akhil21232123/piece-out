@@ -11,6 +11,36 @@ const BRAND: ProductTheme = {
 };
 
 export const PRODUCT_THEMES: Record<string, ProductTheme> = {
+  "po-21": {
+    paper: "#f6e6ec",
+    stroke: "rgba(120,48,58,0.2)",
+    pieces: ["#d6336c", "#e0a458", "#2f9e8f", "#78303a", "#fffaf3"],
+  },
+  "po-22": {
+    paper: "#eaf2ea",
+    stroke: "rgba(22,38,36,0.18)",
+    pieces: ["#356d5e", "#5aa0d8", "#c7392b", "#887a5e", "#f4f0e6"],
+  },
+  "po-23": {
+    paper: "#ebe9e6",
+    stroke: "rgba(20,23,23,0.2)",
+    pieces: ["#302b28", "#f2b632", "#414547", "#acafac", "#fffaf3"],
+  },
+  "po-24": {
+    paper: "#f7e7e6",
+    stroke: "rgba(150,45,43,0.2)",
+    pieces: ["#962d2b", "#d2968f", "#7c8b3a", "#37231b", "#fffaf3"],
+  },
+  "po-25": {
+    paper: "#e6edf4",
+    stroke: "rgba(31,43,53,0.2)",
+    pieces: ["#1c4b6d", "#f2a900", "#1f2b35", "#ff6b1a", "#fffaf3"],
+  },
+  "po-26": {
+    paper: "#f3e3d6",
+    stroke: "rgba(92,21,23,0.22)",
+    pieces: ["#b3191f", "#d9922e", "#1f3a68", "#5c1517", "#fffaf3"],
+  },
   "po-drop": {
     paper: "#efe8dc",
     stroke: "rgba(23,20,17,0.14)",

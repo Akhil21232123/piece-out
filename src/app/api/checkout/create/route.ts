@@ -144,7 +144,7 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
-  const shipping = SHIPPING.free ? 0 : await quoteDelhiveryCharge(pincode, parcelWeightG(items));
+  const shipping = SHIPPING.flatFee ?? (await quoteDelhiveryCharge(pincode, parcelWeightG(items)));
   const { gst, total } = payableOf(subtotal, shipping);
   const id = makeOrderId();
 
