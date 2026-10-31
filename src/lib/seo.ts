@@ -162,7 +162,7 @@ export function jsonLdGraph() {
         url: `${SITE.url}/#shop`,
         name: "pieceout Collection Drop 01",
         description:
-          "The current pieceout drop, filtered by art, culture, music, sports, movies, and more: limited pictorial puzzles as premium can-and-frame objects, plus a mystery puzzle packed as a random edition.",
+          "The current pieceout drop, filtered by sports, movies, and more: limited pictorial puzzles as premium can-and-frame objects, plus a mystery puzzle packed as a random edition.",
         isPartOf: { "@id": `${SITE.url}/#website` },
         about: { "@id": `${SITE.url}/#brand` },
         numberOfItems: SHOP.length,

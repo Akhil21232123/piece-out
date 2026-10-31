@@ -179,7 +179,7 @@ export function Shop() {
             <span className="shop-line inline-block">products.</span>
           </h2>
           <p className="hidden max-w-[16rem] pb-3 text-sm text-[#7a7268] md:block">
-            art. culture. music. sports. movies.
+            sports. movies. more.
           </p>
         </div>
         <div className="mb-6 px-3 md:mb-10 md:px-8">
