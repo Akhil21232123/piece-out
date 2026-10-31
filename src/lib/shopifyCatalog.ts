@@ -216,7 +216,11 @@ export function mergeCatalog(local: Product[], remote: ShopifyProductNode[]): Pr
     mapped.find((product) => product.id === DROP_ID) ??
     extras.find((product) => product.id === DROP_ID) ??
     MYSTERY;
-  const rest = [...mapped, ...extras].filter((product) => product.id !== DROP_ID);
+  // Shop order follows PRODUCTS in src/data/products.ts; Shopify-only products go after.
+  const rank = new Map(local.map((product, index) => [product.id, index]));
+  const rest = [...mapped, ...extras]
+    .filter((product) => product.id !== DROP_ID)
+    .sort((x, y) => (rank.get(x.id) ?? local.length) - (rank.get(y.id) ?? local.length));
   return [
     { ...mystery, soldOut: editions.length > 0 ? editions.every((product) => product.soldOut) : mystery.soldOut },
     ...rest,

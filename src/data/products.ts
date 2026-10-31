@@ -65,7 +65,6 @@ export const PRODUCTS: Product[] = [
     width: 1024,
     height: 991,
     category: "art",
-    soldOut: true,
   },
   {
     id: "po-11",
@@ -99,17 +98,6 @@ export const PRODUCTS: Product[] = [
       "Inspired by a fearless champion and his relentless pursuit of the podium. For those who live for the lights, the speed, and turning every lap into a statement.",
     image: "/products/starboy.jpg",
     width: 1002,
-    height: 1024,
-    category: "music",
-  },
-  {
-    id: "po-20",
-    name: "Billie Blue",
-    line: "Hit me hard and soft.",
-    story:
-      "Blue hour energy. Cap on. Tracklist down. One hour off the algorithm, then hang the album you already feel.",
-    image: "/products/billie-blue-pop.jpg",
-    width: 1024,
     height: 1024,
     category: "music",
   },
@@ -150,30 +138,6 @@ export const PRODUCTS: Product[] = [
     soldOut: true,
   },
   {
-    id: "po-18",
-    name: "Stadium Dreams",
-    line: "For late nights.",
-    story:
-      "For the nights when the whole world feels like a stadium and every dream feels within reach. Inspired by a young star making his mark and playing with something bigger than himself.",
-    image: "/products/stadium-dreams.jpg",
-    width: 1024,
-    height: 992,
-    category: "sports",
-    printedGrid: true,
-  },
-  {
-    id: "po-19",
-    name: "Golden Hour",
-    line: "For late nights.",
-    story:
-      "A tribute to the moments that become unforgettable. Made for celebrating big wins, golden memories, and the legends who make them happen.",
-    image: "/products/golden-hour.jpg",
-    width: 1024,
-    height: 991,
-    category: "sports",
-    printedGrid: true,
-  },
-  {
     id: "po-08",
     name: "Fight Club",
     line: "1999 classic.",
@@ -195,6 +159,41 @@ export const PRODUCTS: Product[] = [
     width: 1024,
     height: 987,
     category: "more",
+  },
+  {
+    id: "po-19",
+    name: "Golden Hour",
+    line: "For late nights.",
+    story:
+      "A tribute to the moments that become unforgettable. Made for celebrating big wins, golden memories, and the legends who make them happen.",
+    image: "/products/golden-hour.jpg",
+    width: 1024,
+    height: 991,
+    category: "sports",
+    printedGrid: true,
+  },
+  {
+    id: "po-18",
+    name: "Stadium Dreams",
+    line: "For late nights.",
+    story:
+      "For the nights when the whole world feels like a stadium and every dream feels within reach. Inspired by a young star making his mark and playing with something bigger than himself.",
+    image: "/products/stadium-dreams.jpg",
+    width: 1024,
+    height: 992,
+    category: "sports",
+    printedGrid: true,
+  },
+  {
+    id: "po-20",
+    name: "Billie Blue",
+    line: "Hit me hard and soft.",
+    story:
+      "Blue hour energy. Cap on. Tracklist down. One hour off the algorithm, then hang the album you already feel.",
+    image: "/products/billie-blue-pop.jpg",
+    width: 1024,
+    height: 1024,
+    category: "music",
   },
 ];
 
