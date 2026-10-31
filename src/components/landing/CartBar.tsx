@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import gsap from "gsap";
 import { cartCount, cartSubtotal, useCartStore } from "@/store/cartStore";
-import { formatInr } from "@/lib/brand";
+import { formatInr, FREE_SHIPPING } from "@/lib/brand";
 import { PuzzlizeButton } from "./PuzzlizeButton";
 
 export function CartBar({
@@ -55,7 +55,10 @@ export function CartBar({
               <p className="text-sm font-extrabold">
                 {count} {count === 1 ? "Product" : "Products"}
               </p>
-              <p className="text-xs text-[#c8c0b4]">{formatInr(subtotal)}</p>
+              <p className="text-xs text-[#c8c0b4]">
+                {formatInr(subtotal)}
+                {FREE_SHIPPING ? " · free shipping" : ""}
+              </p>
             </div>
             <PuzzlizeButton
               onClick={onCheckout}

@@ -7,7 +7,7 @@ import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import type { Product } from "@/data/products";
 import { DROP_ID, isProductSoldOut, productCompare, productMerchandiseId, productPrice } from "@/data/products";
-import { BRAND } from "@/lib/brand";
+import { BRAND, FREE_SHIPPING } from "@/lib/brand";
 import { DealPrice } from "@/components/brand/DealPrice";
 import { useCartStore } from "@/store/cartStore";
 import { playAddToCart } from "@/lib/cartBurst";
@@ -282,7 +282,7 @@ function StoryDialog({
             </div>
 
             <p className="mt-2 text-xs font-extrabold uppercase tracking-[0.12em] text-[#7a7268]">
-              {BRAND.pieces} pieces · 1 hour
+              {BRAND.pieces} pieces · 1 hour{FREE_SHIPPING ? " · free shipping" : ""}
             </p>
 
             <p className="mt-3 text-[15px] leading-relaxed text-[#5e574e] md:text-base">

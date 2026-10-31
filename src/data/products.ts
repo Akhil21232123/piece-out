@@ -1,9 +1,6 @@
 import { compareFor, priceFor } from "@/lib/brand";
 
 export const CATEGORIES = [
-  { id: "art", label: "Art" },
-  { id: "culture", label: "Culture" },
-  { id: "music", label: "Music" },
   { id: "sports", label: "Sports" },
   { id: "movies", label: "Movies" },
   { id: "more", label: "More" },
@@ -53,7 +50,7 @@ export const PRODUCTS: Product[] = [
     image: "/products/disco-cheetah.jpg",
     width: 1024,
     height: 1024,
-    category: "art",
+    category: "more",
     isNew: true,
   },
   {
@@ -65,7 +62,7 @@ export const PRODUCTS: Product[] = [
     image: "/products/tokyo-summer.jpg",
     width: 1024,
     height: 1024,
-    category: "culture",
+    category: "more",
     isNew: true,
   },
   {
@@ -77,7 +74,7 @@ export const PRODUCTS: Product[] = [
     image: "/products/city-views.jpg",
     width: 1024,
     height: 1024,
-    category: "culture",
+    category: "more",
     isNew: true,
   },
   {
@@ -89,19 +86,7 @@ export const PRODUCTS: Product[] = [
     image: "/products/dirty-martini.jpg",
     width: 1024,
     height: 1024,
-    category: "culture",
-    isNew: true,
-  },
-  {
-    id: "po-25",
-    name: "Virat Kohli",
-    line: "The king still rises.",
-    story:
-      "For every fan who has held their breath when he walks out to bat. Years of impossible chases, of never giving up on a game everyone else had written off. If he taught you that discipline builds greatness, build him one piece at a time, then give him the wall he deserves.",
-    image: "/products/virat-kohli.jpg",
-    width: 1024,
-    height: 1002,
-    category: "sports",
+    category: "more",
     isNew: true,
   },
   {
@@ -114,7 +99,7 @@ export const PRODUCTS: Product[] = [
     shots: ["/products/diet-coke-can.jpg"],
     width: 1200,
     height: 1200,
-    category: "art",
+    category: "more",
   },
   {
     id: "po-10",
@@ -126,7 +111,7 @@ export const PRODUCTS: Product[] = [
     shots: ["/products/caprese-break-hang.jpg"],
     width: 1024,
     height: 991,
-    category: "art",
+    category: "more",
   },
   {
     id: "po-11",
@@ -138,7 +123,7 @@ export const PRODUCTS: Product[] = [
     shots: ["/products/lily-bloom-hang.jpg"],
     width: 1024,
     height: 989,
-    category: "art",
+    category: "more",
   },
   {
     id: "po-12",
@@ -150,7 +135,7 @@ export const PRODUCTS: Product[] = [
     shots: ["/products/vino-hours-hang.jpg"],
     width: 1024,
     height: 986,
-    category: "culture",
+    category: "more",
   },
   {
     id: "po-09",
@@ -165,6 +150,18 @@ export const PRODUCTS: Product[] = [
     category: "more",
   },
   {
+    id: "po-25",
+    name: "Virat Kohli",
+    line: "The king still rises.",
+    story:
+      "For every fan who has held their breath when he walks out to bat. Years of impossible chases, of never giving up on a game everyone else had written off. If he taught you that discipline builds greatness, build him one piece at a time, then give him the wall he deserves.",
+    image: "/products/virat-kohli.jpg",
+    width: 1024,
+    height: 1002,
+    category: "sports",
+    isNew: true,
+  },
+  {
     id: "po-13",
     name: "Starboy",
     line: "Max mode. no limits.",
@@ -173,7 +170,7 @@ export const PRODUCTS: Product[] = [
     image: "/products/starboy.jpg",
     width: 1002,
     height: 1024,
-    category: "music",
+    category: "sports",
   },
   {
     id: "po-15",
@@ -185,7 +182,7 @@ export const PRODUCTS: Product[] = [
     shots: ["/products/cherry-pick-hang.jpg"],
     width: 1024,
     height: 989,
-    category: "art",
+    category: "more",
     soldOut: true,
   },
   {
@@ -197,7 +194,7 @@ export const PRODUCTS: Product[] = [
     image: "/products/fuji-garden.jpg",
     width: 1024,
     height: 992,
-    category: "art",
+    category: "more",
     printedGrid: true,
   },
   {
@@ -267,7 +264,7 @@ export const PRODUCTS: Product[] = [
     image: "/products/billie-blue-pop.jpg",
     width: 1024,
     height: 1024,
-    category: "music",
+    category: "more",
   },
 ];
 

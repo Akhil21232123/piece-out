@@ -15,7 +15,7 @@ import {
   productPrice,
 } from "@/data/products";
 import { themeFor } from "@/data/productThemes";
-import { formatInr } from "@/lib/brand";
+import { formatInr, FREE_SHIPPING } from "@/lib/brand";
 import { DealPrice } from "@/components/brand/DealPrice";
 import { useCartStore } from "@/store/cartStore";
 import { FrameSwitch } from "./FrameSwitch";
@@ -363,12 +363,19 @@ export function ProductCard({
                 {formatInr(price)}
               </span>
             ) : (
-              <DealPrice
-                withFrame={withFrame}
-                amount={price}
-                compare={productCompare(product, withFrame)}
-                className="text-lg text-[#171411]"
-              />
+              <>
+                <DealPrice
+                  withFrame={withFrame}
+                  amount={price}
+                  compare={productCompare(product, withFrame)}
+                  className="text-lg text-[#171411]"
+                />
+                {FREE_SHIPPING ? (
+                  <span className="mt-0.5 block text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#7a7268]">
+                    free shipping
+                  </span>
+                ) : null}
+              </>
             )}
           </p>
         </div>

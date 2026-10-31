@@ -4,7 +4,8 @@ import { type FormEvent, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import confetti from "canvas-confetti";
-import { COLOR, formatInr, parcelWeightG, payableOf, SHIPPING } from "@/lib/brand";
+import { COLOR, formatInr, FREE_SHIPPING, parcelWeightG, payableOf, SHIPPING } from "@/lib/brand";
+import { FreeShipping } from "@/components/brand/FreeShipping";
 import { isEmail, normalizePhone } from "@/lib/checkout";
 import { addressLooksComplete, isPincode, normalizePincode } from "@/lib/pincode";
 import {
@@ -628,7 +629,9 @@ function CheckoutDialog({ onClose }: { onClose: () => void }) {
               <div className="mt-1 flex justify-between text-[#7a7268]">
                 <dt>Delivery</dt>
                 <dd className="tabular-nums">
-                  {SHIPPING.flatFee != null
+                  {FREE_SHIPPING ? (
+                    <span className="font-extrabold text-[#171411]">FREE</span>
+                  ) : SHIPPING.flatFee != null
                     ? formatInr(SHIPPING.flatFee)
                     : pinBusy
                       ? "…"
@@ -641,7 +644,12 @@ function CheckoutDialog({ onClose }: { onClose: () => void }) {
                 <dt>Pay</dt>
                 <dd className="tabular-nums">{formatInr(due.total)}</dd>
               </div>
-              {SHIPPING.flatFee != null ? (
+              {FREE_SHIPPING ? (
+                <p className="mt-2 flex flex-wrap items-center gap-2 text-xs text-[#7a7268]">
+                  <FreeShipping />
+                  on us, anywhere in India. Ships in {SHIPPING.days}.
+                </p>
+              ) : SHIPPING.flatFee != null ? (
                 <p className="mt-2 text-xs text-[#7a7268]">Ships with Delhivery in {SHIPPING.days}.</p>
               ) : (
                 <p className="mt-2 text-xs text-[#7a7268]">
