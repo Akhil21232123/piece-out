@@ -17,6 +17,8 @@ export const BRAND = {
 
 export const SHIPPING = {
   days: "3–5 days",
+  /** Flat delivery fee (₹) charged on every order, any pincode. Set to null to charge Delhivery's live rate instead. */
+  flatFee: 60 as number | null,
 } as const;
 
 export const COLOR = {

@@ -28,6 +28,8 @@ export type Product = {
   printedGrid?: boolean;
   fit?: "cover" | "contain";
   soldOut?: boolean;
+  /** Shows the NEW tag on the shop card. Remove once the drop is no longer new. */
+  isNew?: boolean;
   priceBare?: number;
   priceFrame?: number;
   compareBare?: number;
@@ -42,6 +44,66 @@ export const CARD_SIZE = 1024;
 export const DROP_ID = "po-drop";
 
 export const PRODUCTS: Product[] = [
+  {
+    id: "po-21",
+    name: "Disco Cheetah",
+    line: "Danced all night. napping all day.",
+    story:
+      "For the one who's last off the dance floor and first asleep in the cab home. A wild cat, a pink bed, a disco ball still spinning above her. Proof you can be fierce and still need a nap, because rest is part of the party.",
+    image: "/products/disco-cheetah.jpg",
+    width: 1024,
+    height: 1024,
+    category: "art",
+    isNew: true,
+  },
+  {
+    id: "po-22",
+    name: "Tokyo Summer",
+    line: "Anime street edition.",
+    story:
+      "Remember summers that felt endless? A quiet street, a cold drink from the vending machine, nowhere you had to be. For everyone who grew up wishing they could step inside an anime frame. Spend an hour on that street, then keep it on your wall.",
+    image: "/products/tokyo-summer.jpg",
+    width: 1024,
+    height: 1024,
+    category: "culture",
+    isNew: true,
+  },
+  {
+    id: "po-23",
+    name: "City Views",
+    line: "New York, after the rain.",
+    story:
+      "For the dreamer with a city on their vision board. Wet streets, yellow cabs and a skyline that keeps telling you to aim higher. Piece it together now and hang it up, until the day you're standing on that corner yourself.",
+    image: "/products/city-views.jpg",
+    width: 1024,
+    height: 1024,
+    category: "culture",
+    isNew: true,
+  },
+  {
+    id: "po-24",
+    name: "Dirty Martini",
+    line: "Shaken. stirred. pieced.",
+    story:
+      "Two glasses, a roll of the dice, and a night that hasn't decided what it wants to be yet. For the friends who make plans over drinks and memories by accident. Pour one, pick a piece, and let the evening take its time.",
+    image: "/products/dirty-martini.jpg",
+    width: 1024,
+    height: 1024,
+    category: "culture",
+    isNew: true,
+  },
+  {
+    id: "po-25",
+    name: "Virat Kohli",
+    line: "The king still rises.",
+    story:
+      "For every fan who has held their breath when he walks out to bat. Years of impossible chases, of never giving up on a game everyone else had written off. If he taught you that discipline builds greatness, build him one piece at a time, then give him the wall he deserves.",
+    image: "/products/virat-kohli.jpg",
+    width: 1024,
+    height: 1002,
+    category: "sports",
+    isNew: true,
+  },
   {
     id: "po-01",
     name: "Diet Coke",
@@ -65,7 +127,6 @@ export const PRODUCTS: Product[] = [
     width: 1024,
     height: 991,
     category: "art",
-    soldOut: true,
   },
   {
     id: "po-11",
@@ -92,6 +153,18 @@ export const PRODUCTS: Product[] = [
     category: "culture",
   },
   {
+    id: "po-09",
+    name: "Expensive Shit",
+    line: "I like expensive shit.",
+    story:
+      "For people who like their taste a little extravagant and their choices a little unnecessary. Because if you're going to have a personality, you might as well have expensive taste.",
+    image: "/products/expensive-shit.jpg",
+    shots: ["/products/expensive-shit-hang.jpg"],
+    width: 1024,
+    height: 987,
+    category: "more",
+  },
+  {
     id: "po-13",
     name: "Starboy",
     line: "Max mode. no limits.",
@@ -99,17 +172,6 @@ export const PRODUCTS: Product[] = [
       "Inspired by a fearless champion and his relentless pursuit of the podium. For those who live for the lights, the speed, and turning every lap into a statement.",
     image: "/products/starboy.jpg",
     width: 1002,
-    height: 1024,
-    category: "music",
-  },
-  {
-    id: "po-20",
-    name: "Billie Blue",
-    line: "Hit me hard and soft.",
-    story:
-      "Blue hour energy. Cap on. Tracklist down. One hour off the algorithm, then hang the album you already feel.",
-    image: "/products/billie-blue-pop.jpg",
-    width: 1024,
     height: 1024,
     category: "music",
   },
@@ -150,16 +212,27 @@ export const PRODUCTS: Product[] = [
     soldOut: true,
   },
   {
-    id: "po-18",
-    name: "Stadium Dreams",
-    line: "For late nights.",
+    id: "po-08",
+    name: "Fight Club",
+    line: "1999 classic.",
     story:
-      "For the nights when the whole world feels like a stadium and every dream feels within reach. Inspired by a young star making his mark and playing with something bigger than himself.",
-    image: "/products/stadium-dreams.jpg",
+      "Raw, rebellious, and unapologetically chaotic. Puzzle for the fans inspired by the cult classic and its take on breaking rules, finding yourself, and questioning the world around you.",
+    image: "/products/fight-club.jpg",
     width: 1024,
-    height: 992,
-    category: "sports",
-    printedGrid: true,
+    height: 989,
+    category: "movies",
+  },
+  {
+    id: "po-26",
+    name: "Spider-Man",
+    line: "Your friendly neighbourhood puzzle.",
+    story:
+      "For the kid who swung from the sofa in a homemade mask, and the grown-up who still believes ordinary people can be heroes. Crouched, ready, keeping watch over your room. Some heroes don't need a cape, just one hour of your time.",
+    image: "/products/spider-man.jpg",
+    width: 1024,
+    height: 1024,
+    category: "movies",
+    isNew: true,
   },
   {
     id: "po-19",
@@ -174,27 +247,27 @@ export const PRODUCTS: Product[] = [
     printedGrid: true,
   },
   {
-    id: "po-08",
-    name: "Fight Club",
-    line: "1999 classic.",
+    id: "po-18",
+    name: "Stadium Dreams",
+    line: "For late nights.",
     story:
-      "Raw, rebellious, and unapologetically chaotic. Puzzle for the fans inspired by the cult classic and its take on breaking rules, finding yourself, and questioning the world around you.",
-    image: "/products/fight-club.jpg",
+      "For the nights when the whole world feels like a stadium and every dream feels within reach. Inspired by a young star making his mark and playing with something bigger than himself.",
+    image: "/products/stadium-dreams.jpg",
     width: 1024,
-    height: 989,
-    category: "movies",
+    height: 992,
+    category: "sports",
+    printedGrid: true,
   },
   {
-    id: "po-09",
-    name: "Expensive Shit",
-    line: "I like expensive shit.",
+    id: "po-20",
+    name: "Billie Blue",
+    line: "Hit me hard and soft.",
     story:
-      "For people who like their taste a little extravagant and their choices a little unnecessary. Because if you're going to have a personality, you might as well have expensive taste.",
-    image: "/products/expensive-shit.jpg",
-    shots: ["/products/expensive-shit-hang.jpg"],
+      "Blue hour energy. Cap on. Tracklist down. One hour off the algorithm, then hang the album you already feel.",
+    image: "/products/billie-blue-pop.jpg",
     width: 1024,
-    height: 987,
-    category: "more",
+    height: 1024,
+    category: "music",
   },
 ];
 

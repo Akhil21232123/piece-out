@@ -219,7 +219,7 @@ function CheckoutDialog({ onClose }: { onClose: () => void }) {
     };
   }, [pincode, weight]);
 
-  const due = payableOf(subtotal, pinOk ? delivery : 0);
+  const due = payableOf(subtotal, SHIPPING.flatFee ?? (pinOk ? delivery : 0));
 
   const markPaid = (id: string, amount: number) => {
     watchRef.current?.();
@@ -628,16 +628,26 @@ function CheckoutDialog({ onClose }: { onClose: () => void }) {
               <div className="mt-1 flex justify-between text-[#7a7268]">
                 <dt>Delivery</dt>
                 <dd className="tabular-nums">
-                  {pinBusy ? "…" : pinOk && due.shipping > 0 ? formatInr(due.shipping) : "Add pincode"}
+                  {SHIPPING.flatFee != null
+                    ? formatInr(SHIPPING.flatFee)
+                    : pinBusy
+                      ? "…"
+                      : pinOk && due.shipping > 0
+                        ? formatInr(due.shipping)
+                        : "Add pincode"}
                 </dd>
               </div>
               <div className="mt-2 flex justify-between font-extrabold text-[#171411]">
                 <dt>Pay</dt>
                 <dd className="tabular-nums">{formatInr(due.total)}</dd>
               </div>
-              <p className="mt-2 text-xs text-[#7a7268]">
-                Delivery is Delhivery’s rate for your pin. Collected here, paid to Delhivery when we book. Ships in {SHIPPING.days}.
-              </p>
+              {SHIPPING.flatFee != null ? (
+                <p className="mt-2 text-xs text-[#7a7268]">Ships with Delhivery in {SHIPPING.days}.</p>
+              ) : (
+                <p className="mt-2 text-xs text-[#7a7268]">
+                  Delivery is Delhivery’s rate for your pin. Collected here, paid to Delhivery when we book. Ships in {SHIPPING.days}.
+                </p>
+              )}
             </dl>
 
             <p className="mt-2 text-center text-[11px] font-semibold uppercase tracking-[0.16em] text-[#7a7268]">

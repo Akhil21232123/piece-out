@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { isPincode, normalizePincode } from "@/lib/pincode";
+import { SHIPPING } from "@/lib/brand";
 import { quoteDelhiveryCharge, resolveShipTo } from "@/lib/shipping";
 
 export const runtime = "nodejs";
@@ -14,7 +15,7 @@ export async function GET(request: Request) {
 
   const weight = Math.max(100, Math.round(Number(url.searchParams.get("weight") || 500) || 500));
   const place = await resolveShipTo(pin);
-  const delivery = place.ok ? await quoteDelhiveryCharge(pin, weight) : 0;
+  const delivery = !place.ok ? 0 : SHIPPING.flatFee ?? (await quoteDelhiveryCharge(pin, weight));
   return NextResponse.json({
     ok: place.ok,
     pincode: pin,
