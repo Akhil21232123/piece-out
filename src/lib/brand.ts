@@ -26,6 +26,13 @@ export const SHIPPING = {
 
 export const FREE_SHIPPING = SHIPPING.flatFee === 0;
 
+/** Finish the puzzle on /play → this % off every can at checkout (one order). */
+export const PUZZLE_REWARD = { code: "SOLVED5", percent: 5 } as const;
+
+export function rewardPrice(price: number): number {
+  return Math.round((price * (100 - PUZZLE_REWARD.percent)) / 100);
+}
+
 export const COLOR = {
   void: "#070506",
   wine: "#4A0E1F",

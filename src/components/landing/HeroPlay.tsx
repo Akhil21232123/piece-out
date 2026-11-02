@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { edgesFor } from "@/lib/jigsaw";
@@ -50,8 +50,14 @@ function shuffleSlots() {
   return slots;
 }
 
-export function HeroPlay() {
+/** `onSolved` turns on play mode (/play): no auto-solve for reduced motion, callback on a real win. */
+export function HeroPlay({ onSolved }: { onSolved?: () => void } = {}) {
   "use no memo";
+  const solvedRef = useRef(onSolved);
+  const playMode = Boolean(onSolved);
+  useEffect(() => {
+    solvedRef.current = onSolved;
+  }, [onSolved]);
   const rootRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const boardRef = useRef<HTMLDivElement>(null);
@@ -110,7 +116,10 @@ export function HeroPlay() {
 
       const showWin = (on: boolean) => {
         done = on;
-        if (on) winAt = Date.now();
+        if (on) {
+          winAt = Date.now();
+          solvedRef.current?.();
+        }
         root.classList.toggle("is-won", on);
         if (stamp) {
           gsap.to(stamp, {
@@ -303,7 +312,7 @@ export function HeroPlay() {
       parkShuffled(false);
       layout();
 
-      if (reduced) {
+      if (reduced && !playMode) {
         pieces.forEach((_, i) => seatBoard(i, 0));
         setHint("Diet Coke. 150 pieces.");
       } else {

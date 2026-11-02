@@ -6,8 +6,9 @@ import { useGSAP } from "@gsap/react";
 import { BRAND } from "@/lib/brand";
 import { DealPrice } from "@/components/brand/DealPrice";
 import { FreeShipping } from "@/components/brand/FreeShipping";
-import { FREE_SHIPPING } from "@/lib/brand";
-import { HeroPlay } from "./HeroPlay";
+import { FREE_SHIPPING, PUZZLE_REWARD } from "@/lib/brand";
+import Link from "next/link";
+import Image from "next/image";
 
 gsap.registerPlugin(useGSAP);
 
@@ -150,6 +151,13 @@ export function HowItWorks() {
             >
               Shop the drop
             </button>
+            <Link
+              href="/play"
+              className="inline-flex min-h-12 items-center gap-2 rounded-full border border-[#171411]/16 bg-[#fffaf3] px-5 text-sm font-extrabold text-[#171411] transition hover:border-[#171411]/40 lg:hidden"
+            >
+              <PieceMark />
+              solve it · {PUZZLE_REWARD.percent}% off
+            </Link>
           </div>
           <p data-how-in className="mt-4 text-sm text-[#5e574e]">
             <span className="flex flex-wrap items-end gap-3">
@@ -168,8 +176,59 @@ export function HowItWorks() {
             )}
           </p>
         </div>
-        <HeroPlay />
+        <PlayTeaser />
       </div>
     </section>
+  );
+}
+
+function PieceMark({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden className={className} fill="currentColor">
+      <path d="M9 3h3.2a2.4 2.4 0 1 1 4.6 0H21v4.6a2.4 2.4 0 1 1 0 4.6V17h-4.2a2.4 2.4 0 1 0-4.6 0H9v-4.2a2.4 2.4 0 1 1 0-4.6z" />
+    </svg>
+  );
+}
+
+/** Desktop hero card that sends people to the /play game (the game itself lives on /play). */
+function PlayTeaser() {
+  return (
+    <Link
+      href="/play"
+      data-how-in
+      aria-label={`Play the can game and get ${PUZZLE_REWARD.percent}% off`}
+      className="group relative mx-auto hidden w-full max-w-[34rem] overflow-hidden rounded-[1.6rem] bg-[#171411] shadow-[0_24px_60px_rgb(23_20_17_/_0.22)] lg:block"
+    >
+      <div className="relative aspect-[5/4]">
+        <Image
+          src="/products/diet-coke-puzzle.jpg"
+          alt=""
+          fill
+          sizes="34rem"
+          className="object-cover object-[50%_35%] opacity-90 transition duration-500 group-hover:scale-[1.03] group-hover:opacity-100"
+        />
+        <div
+          aria-hidden
+          className="absolute inset-0"
+          style={{
+            backgroundImage:
+              "linear-gradient(to right, rgb(255 250 243 / 0.28) 1px, transparent 1px), linear-gradient(to bottom, rgb(255 250 243 / 0.28) 1px, transparent 1px)",
+            backgroundSize: "33.333% 25%",
+          }}
+        />
+        <PieceMark className="absolute right-[12%] top-[10%] h-28 w-28 rotate-12 text-[#f5c400] drop-shadow-[0_14px_24px_rgb(23_20_17_/_0.45)] transition duration-500 group-hover:rotate-0 group-hover:scale-110" />
+        <div aria-hidden className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-[#171411] via-[#171411]/70 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 p-6">
+          <p className="text-[11px] font-extrabold uppercase tracking-[0.22em] text-[#f5c400]">the can game</p>
+          <p className="mt-1 text-4xl font-extrabold leading-[0.95] tracking-[-0.04em] text-[#fffaf3]">
+            solve it. get {PUZZLE_REWARD.percent}% off.
+          </p>
+          <span className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-full bg-[#f5c400] px-5 text-sm font-extrabold text-[#171411] transition group-hover:bg-[#fffaf3]">
+            <PieceMark />
+            Play the puzzle
+          </span>
+        </div>
+      </div>
+    </Link>
   );
 }

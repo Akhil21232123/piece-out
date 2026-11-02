@@ -2,16 +2,19 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cartCount, useCartStore } from "@/store/cartStore";
 import { PuzzlizeButton } from "./PuzzlizeButton";
 import { Logo } from "@/components/brand/Logo";
+import { PUZZLE_REWARD } from "@/lib/brand";
 
 export function Nav({ onCheckout }: { onCheckout: () => void }) {
   const count = useCartStore((state) => cartCount(state.lines));
   const [live, setLive] = useState(false);
   const path = usePathname();
+  const router = useRouter();
   const home = path === "/";
+  const onPlay = path === "/play";
   const bag = live ? count : 0;
 
   useEffect(() => {
@@ -23,7 +26,7 @@ export function Nav({ onCheckout }: { onCheckout: () => void }) {
       document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
       return;
     }
-    window.location.href = `/#${id}`;
+    router.push(`/#${id}`);
   };
 
   return (
@@ -36,7 +39,21 @@ export function Nav({ onCheckout }: { onCheckout: () => void }) {
           <button type="button" onClick={() => go("shop")} className="transition hover:text-[#171411]">
             products
           </button>
+          {!onPlay ? (
+            <Link href="/play" className="transition hover:text-[#171411]">
+              play · <span className="font-extrabold text-[#e31b23]">{PUZZLE_REWARD.percent}% off</span>
+            </Link>
+          ) : null}
         </nav>
+        <div className="flex items-center gap-2">
+        {!onPlay ? (
+          <Link
+            href="/play"
+            className="rounded-full border border-[#e31b23]/30 bg-[#fffaf3] px-3 py-2 text-[11px] font-extrabold text-[#e31b23] md:hidden"
+          >
+            play · {PUZZLE_REWARD.percent}% off
+          </Link>
+        ) : null}
         {bag > 0 ? (
           <PuzzlizeButton
             onClick={onCheckout}
@@ -53,6 +70,7 @@ export function Nav({ onCheckout }: { onCheckout: () => void }) {
             Shop
           </button>
         )}
+        </div>
       </div>
     </header>
   );
