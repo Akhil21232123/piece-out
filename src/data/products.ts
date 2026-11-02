@@ -42,6 +42,18 @@ export const DROP_ID = "po-drop";
 
 export const PRODUCTS: Product[] = [
   {
+    id: "po-17",
+    name: "Fuji Garden",
+    line: "For calm minds.",
+    story:
+      "A puzzle for the quiet escape, inspired by Japan's timeless gardens where cherry blossoms, koi ponds, and Mount Fuji come together in one peaceful scene.",
+    image: "/products/fuji-garden.jpg",
+    width: 1024,
+    height: 992,
+    category: "more",
+    printedGrid: true,
+  },
+  {
     id: "po-21",
     name: "Disco Cheetah",
     line: "Danced all night. napping all day.",
@@ -184,18 +196,6 @@ export const PRODUCTS: Product[] = [
     height: 989,
     category: "more",
     soldOut: true,
-  },
-  {
-    id: "po-17",
-    name: "Fuji Garden",
-    line: "For calm minds.",
-    story:
-      "A puzzle for the quiet escape, inspired by Japan's timeless gardens where cherry blossoms, koi ponds, and Mount Fuji come together in one peaceful scene.",
-    image: "/products/fuji-garden.jpg",
-    width: 1024,
-    height: 992,
-    category: "more",
-    printedGrid: true,
   },
   {
     id: "po-06",
