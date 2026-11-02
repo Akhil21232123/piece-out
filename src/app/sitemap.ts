@@ -11,6 +11,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "weekly",
       priority: 1,
     },
+    {
+      url: `${SITE.url}/play`,
+      lastModified: now,
+      changeFrequency: "monthly",
+      priority: 0.6,
+    },
     ...SHOP.map((product, index) => ({
       url: `${SITE.url}/#${product.id}`,
       lastModified: now,

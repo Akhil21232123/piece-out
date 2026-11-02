@@ -4,7 +4,17 @@ import { type FormEvent, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import confetti from "canvas-confetti";
-import { COLOR, formatInr, FREE_SHIPPING, parcelWeightG, payableOf, SHIPPING } from "@/lib/brand";
+import {
+  COLOR,
+  formatInr,
+  FREE_SHIPPING,
+  parcelWeightG,
+  payableOf,
+  PUZZLE_REWARD,
+  rewardPrice,
+  SHIPPING,
+} from "@/lib/brand";
+import { useRewardStore } from "@/store/rewardStore";
 import { FreeShipping } from "@/components/brand/FreeShipping";
 import { isEmail, normalizePhone } from "@/lib/checkout";
 import { addressLooksComplete, isPincode, normalizePincode } from "@/lib/pincode";
@@ -60,6 +70,14 @@ function CheckoutDialog({ onClose }: { onClose: () => void }) {
   const dec = useCartStore((state) => state.dec);
   const clear = useCartStore((state) => state.clear);
   const subtotal = cartSubtotal(lines);
+  const reward = useRewardStore((state) => state.unlocked);
+  const hydrateReward = useRewardStore((state) => state.hydrate);
+  const rewardOff = reward
+    ? lines.reduce((sum, line) => sum + (line.unitPrice - rewardPrice(line.unitPrice)) * line.qty, 0)
+    : 0;
+  useEffect(() => {
+    hydrateReward();
+  }, [hydrateReward]);
   const weight = parcelWeightG(lines);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -220,7 +238,7 @@ function CheckoutDialog({ onClose }: { onClose: () => void }) {
     };
   }, [pincode, weight]);
 
-  const due = payableOf(subtotal, SHIPPING.flatFee ?? (pinOk ? delivery : 0));
+  const due = payableOf(subtotal - rewardOff, SHIPPING.flatFee ?? (pinOk ? delivery : 0));
 
   const markPaid = (id: string, amount: number) => {
     watchRef.current?.();
@@ -231,6 +249,7 @@ function CheckoutDialog({ onClose }: { onClose: () => void }) {
     setState("placed");
     window.dispatchEvent(new Event("po-bought"));
     clear();
+    useRewardStore.getState().consume();
   };
 
   const verifyPayment = async (payload: RazorpaySuccess, shopId: string, amount: number) => {
@@ -330,6 +349,7 @@ function CheckoutDialog({ onClose }: { onClose: () => void }) {
             qty: line.qty,
             merchandiseId: line.merchandiseId,
           })),
+          promo: reward ? PUZZLE_REWARD.code : undefined,
         }),
       });
       const data = (await res.json().catch(() => ({}))) as {
@@ -624,8 +644,14 @@ function CheckoutDialog({ onClose }: { onClose: () => void }) {
             <dl className="rounded-[1.1rem] border border-[#171411]/10 bg-[#fffaf3] px-4 py-3 text-sm">
               <div className="flex justify-between text-[#7a7268]">
                 <dt>Subtotal</dt>
-                <dd className="tabular-nums">{formatInr(due.subtotal)}</dd>
+                <dd className="tabular-nums">{formatInr(subtotal)}</dd>
               </div>
+              {rewardOff > 0 ? (
+                <div className="mt-1 flex justify-between font-extrabold text-[#e31b23]">
+                  <dt>Puzzle solved · {PUZZLE_REWARD.percent}% off</dt>
+                  <dd className="tabular-nums">−{formatInr(rewardOff)}</dd>
+                </div>
+              ) : null}
               <div className="mt-1 flex justify-between text-[#7a7268]">
                 <dt>Delivery</dt>
                 <dd className="tabular-nums">

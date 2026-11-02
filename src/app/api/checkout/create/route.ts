@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { randomInt } from "crypto";
-import { makeOrderId, parcelWeightG, payableOf, SHIPPING } from "@/lib/brand";
+import { makeOrderId, parcelWeightG, payableOf, PUZZLE_REWARD, rewardPrice, SHIPPING } from "@/lib/brand";
 import {
   DROP_ID,
   inStockEditionsFrom,
@@ -37,13 +37,21 @@ function assignEdition(pool: Product[]) {
   return product;
 }
 
-function lineOf(product: Product, withFrame: boolean, qty: number, name: string, merchandiseId?: string): OrderItem {
+function lineOf(
+  product: Product,
+  withFrame: boolean,
+  qty: number,
+  name: string,
+  merchandiseId?: string,
+  reward = false,
+): OrderItem {
+  const price = productPrice(product, withFrame);
   return {
     productId: product.id,
     name,
     withFrame,
     qty,
-    unitPrice: productPrice(product, withFrame),
+    unitPrice: reward ? rewardPrice(price) : price,
     merchandiseId: merchandiseId || productMerchandiseId(product, withFrame),
   };
 }
@@ -63,6 +71,7 @@ export async function POST(request: Request) {
     address?: string;
     pincode?: string;
     items?: unknown;
+    promo?: string;
   };
 
   const name = payload.name?.trim() ?? "";
@@ -71,6 +80,8 @@ export async function POST(request: Request) {
   const address = payload.address?.trim() ?? "";
   const pincode = normalizePincode(payload.pincode ?? "");
   const rawItems = Array.isArray(payload.items) ? payload.items.filter(isItem) : [];
+  // Puzzle reward from /play: 5% off each unit, baked into unitPrice so totals, Razorpay and Shopify all agree.
+  const reward = payload.promo === PUZZLE_REWARD.code;
   const { products } = await loadCatalog();
   const catalog = new Map(products.map((product) => [product.id, product]));
   const editions = inStockEditionsFrom(products);
@@ -90,7 +101,7 @@ export async function POST(request: Request) {
           existing.qty += 1;
           continue;
         }
-        items.push(lineOf(assigned, item.withFrame, 1, `mystery · ${assigned.name}`));
+        items.push(lineOf(assigned, item.withFrame, 1, `mystery · ${assigned.name}`, undefined, reward));
       }
       continue;
     }
@@ -102,7 +113,7 @@ export async function POST(request: Request) {
         { status: 400 },
       );
     }
-    items.push(lineOf(product, item.withFrame, qty, product.name, item.merchandiseId));
+    items.push(lineOf(product, item.withFrame, qty, product.name, item.merchandiseId, reward));
   }
 
   if (!name || !email || !phone || !address || !pincode) {
