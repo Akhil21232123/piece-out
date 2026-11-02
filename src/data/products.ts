@@ -280,7 +280,18 @@ export const MYSTERY: Product = {
   category: "more",
 };
 
-export const SHOP: Product[] = [MYSTERY, ...PRODUCTS];
+/** Mystery Puzzle sits right after this product in the shop (not first). */
+export const MYSTERY_AFTER = "po-20"; // Billie Blue
+
+/** Drop the Mystery card into its shop slot; falls back to the end of the list. */
+export function placeMystery(list: Product[], mystery: Product = MYSTERY): Product[] {
+  const rest = list.filter((product) => product.id !== DROP_ID);
+  const at = rest.findIndex((product) => product.id === MYSTERY_AFTER);
+  if (at < 0) return [...rest, mystery];
+  return [...rest.slice(0, at + 1), mystery, ...rest.slice(at + 1)];
+}
+
+export const SHOP: Product[] = placeMystery(PRODUCTS);
 
 export function filterShop(filter: ShopFilter, list: Product[] = SHOP): Product[] {
   const rows = filter === "all" ? list : list.filter((product) => product.category === filter);

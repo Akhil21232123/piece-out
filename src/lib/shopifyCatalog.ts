@@ -1,4 +1,4 @@
-import { CATEGORIES, DROP_ID, MYSTERY, PRODUCTS, type CategoryId, type Product } from "@/data/products";
+import { CATEGORIES, DROP_ID, MYSTERY, placeMystery, SHOP, type CategoryId, type Product } from "@/data/products";
 import { compareFor, priceFor } from "@/lib/brand";
 import {
   adminGraphql,
@@ -102,7 +102,7 @@ const ENSURE_TTL = 10 * 60_000;
 const CATEGORY_IDS = new Set<string>(CATEGORIES.map((item) => item.id));
 
 export function localCatalog(): Product[] {
-  return [MYSTERY, ...PRODUCTS];
+  return SHOP;
 }
 
 function slug(value: string): string {
@@ -222,10 +222,10 @@ export function mergeCatalog(local: Product[], remote: ShopifyProductNode[]): Pr
   const rest = [...mapped, ...extras]
     .filter((product) => product.id !== DROP_ID)
     .sort((x, y) => (rank.get(x.id) ?? local.length) - (rank.get(y.id) ?? local.length));
-  return [
-    { ...mystery, soldOut: editions.length > 0 ? editions.every((product) => product.soldOut) : mystery.soldOut },
-    ...rest,
-  ];
+  return placeMystery(rest, {
+    ...mystery,
+    soldOut: editions.length > 0 ? editions.every((product) => product.soldOut) : mystery.soldOut,
+  });
 }
 
 export async function fetchStorefrontProducts(): Promise<ShopifyProductNode[]> {
