@@ -2,8 +2,8 @@
 
 import { type FormEvent, useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import confetti from "canvas-confetti";
 import {
   COLOR,
   CUSTOM_PUZZLE,
@@ -28,7 +28,6 @@ import {
 } from "@/lib/loadRazorpay";
 import { cartSubtotal, useCartStore } from "@/store/cartStore";
 
-const COLORS = ["#f5c400", "#e31b23", COLOR.purple, "#171411"];
 
 type PayState = "form" | "waiting" | "placed";
 
@@ -38,10 +37,6 @@ const PAY_APPS: { id: PayVia; label: string; className: string }[] = [
   { id: "paytm", label: "Paytm", className: "bg-[#00b9f1] text-[#171411]" },
   { id: "bhim", label: "BHIM / UPI", className: "border border-[#171411]/16 bg-[#fffaf3] text-[#171411]" },
 ];
-
-function fireConfetti() {
-  confetti({ particleCount: 42, spread: 64, origin: { y: 0.7 }, colors: COLORS });
-}
 
 function appLabel(via: PayVia) {
   if (via === "gpay") return "Google Pay";
@@ -66,6 +61,7 @@ export function CheckoutModal({
 }
 
 function CheckoutDialog({ onClose }: { onClose: () => void }) {
+  const router = useRouter();
   const lines = useCartStore((state) => state.lines);
   const inc = useCartStore((state) => state.inc);
   const dec = useCartStore((state) => state.dec);
@@ -250,11 +246,12 @@ function CheckoutDialog({ onClose }: { onClose: () => void }) {
     setOrderId(id);
     setPlacedTotal(amount);
     setPlacedDays(shipDays);
-    fireConfetti();
     setState("placed");
     window.dispatchEvent(new Event("po-bought"));
     clear();
     useRewardStore.getState().consume();
+    // Dedicated page so the Meta Pixel can count the Purchase (and /thank-you works as a conversion URL).
+    router.push(`/thank-you?order=${encodeURIComponent(id)}`);
   };
 
   const verifyPayment = async (payload: RazorpaySuccess, shopId: string, amount: number) => {
