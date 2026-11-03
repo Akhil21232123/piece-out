@@ -52,11 +52,19 @@ export function Nav({ onCheckout }: { onCheckout: () => void }) {
             </Link>
           ) : null}
         </nav>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
+        {path !== "/custom" ? (
+          <Link
+            href="/custom"
+            className="whitespace-nowrap rounded-full bg-[#f5c400] px-2.5 py-2 text-[11px] font-extrabold text-[#171411] md:hidden"
+          >
+            custom ✦
+          </Link>
+        ) : null}
         {!onPlay ? (
           <Link
             href="/play"
-            className="rounded-full border border-[#e31b23]/30 bg-[#fffaf3] px-3 py-2 text-[11px] font-extrabold text-[#e31b23] md:hidden"
+            className="whitespace-nowrap rounded-full border border-[#e31b23]/30 bg-[#fffaf3] px-2.5 py-2 text-[11px] font-extrabold text-[#e31b23] md:hidden"
           >
             play · {PUZZLE_REWARD.percent}% off
           </Link>
@@ -72,7 +80,7 @@ export function Nav({ onCheckout }: { onCheckout: () => void }) {
           <button
             type="button"
             onClick={() => go("shop")}
-            className="rounded-full bg-[#171411] px-4 py-2 text-xs font-extrabold text-[#fffaf3] transition duration-300 hover:scale-[1.04] hover:bg-[#e31b23] md:px-5 md:text-sm"
+            className="whitespace-nowrap rounded-full bg-[#171411] px-3.5 py-2 text-xs font-extrabold text-[#fffaf3] transition duration-300 hover:scale-[1.04] hover:bg-[#e31b23] md:px-5 md:text-sm"
           >
             Shop
           </button>
