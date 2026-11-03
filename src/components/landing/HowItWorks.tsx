@@ -6,7 +6,7 @@ import { useGSAP } from "@gsap/react";
 import { BRAND } from "@/lib/brand";
 import { DealPrice } from "@/components/brand/DealPrice";
 import { FreeShipping } from "@/components/brand/FreeShipping";
-import { FREE_SHIPPING, PUZZLE_REWARD } from "@/lib/brand";
+import { CUSTOM_PUZZLE, FREE_SHIPPING, formatInr, PUZZLE_REWARD } from "@/lib/brand";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -175,6 +175,26 @@ export function HowItWorks() {
               </span>
             )}
           </p>
+          <Link
+            href="/custom"
+            data-how-in
+            className="mt-6 flex items-center justify-between gap-4 rounded-[1.25rem] bg-[#171411] px-5 py-4 text-[#fffaf3] shadow-[0_14px_36px_rgb(23_20_17_/_0.22)] lg:hidden"
+          >
+            <span className="min-w-0">
+              <span className="block text-[11px] font-extrabold uppercase tracking-[0.2em] text-[#f5c400]">
+                customised ✦
+              </span>
+              <span className="mt-0.5 block text-xl font-extrabold leading-tight tracking-tight">
+                your photo, in a can.
+              </span>
+              <span className="mt-1 block text-xs text-[#c8c0b4]">
+                {formatInr(CUSTOM_PUZZLE.price)} · A4 · free frame
+              </span>
+            </span>
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#f5c400] text-xl font-extrabold text-[#171411]" aria-hidden>
+              →
+            </span>
+          </Link>
         </div>
         <PlayTeaser />
       </div>
