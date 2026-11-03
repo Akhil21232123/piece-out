@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import confetti from "canvas-confetti";
 import {
   COLOR,
+  CUSTOM_PUZZLE,
   formatInr,
   FREE_SHIPPING,
   parcelWeightG,
@@ -96,6 +97,9 @@ function CheckoutDialog({ onClose }: { onClose: () => void }) {
   const [orderId, setOrderId] = useState("");
   const [busy, setBusy] = useState(false);
   const [placedTotal, setPlacedTotal] = useState(0);
+  const hasCustom = lines.some((line) => Boolean(line.photoId));
+  const shipDays = hasCustom ? CUSTOM_PUZZLE.days : SHIPPING.days;
+  const [placedDays, setPlacedDays] = useState<string>(SHIPPING.days);
   const [payReady, setPayReady] = useState(true);
   const [waitApp, setWaitApp] = useState<PayVia>("gpay");
   const watchRef = useRef<(() => void) | null>(null);
@@ -245,6 +249,7 @@ function CheckoutDialog({ onClose }: { onClose: () => void }) {
     watchRef.current = null;
     setOrderId(id);
     setPlacedTotal(amount);
+    setPlacedDays(shipDays);
     fireConfetti();
     setState("placed");
     window.dispatchEvent(new Event("po-bought"));
@@ -348,6 +353,7 @@ function CheckoutDialog({ onClose }: { onClose: () => void }) {
             withFrame: line.withFrame,
             qty: line.qty,
             merchandiseId: line.merchandiseId,
+            photoId: line.photoId,
           })),
           promo: reward ? PUZZLE_REWARD.code : undefined,
         }),
@@ -493,7 +499,7 @@ function CheckoutDialog({ onClose }: { onClose: () => void }) {
             <p className="font-hand text-3xl text-[#9b2242]">we got you.</p>
             <p className="mt-3 font-extrabold tracking-tight text-[#171411]">{orderId}</p>
             <p className="mt-3 text-sm leading-relaxed text-[#7a7268]">
-              Razorpay confirmed {formatInr(placedTotal)}. We pack and ship in {SHIPPING.days}. keep this
+              Razorpay confirmed {formatInr(placedTotal)}. We pack and ship in {placedDays}. keep this
               order id.
             </p>
             <button
@@ -547,7 +553,9 @@ function CheckoutDialog({ onClose }: { onClose: () => void }) {
                     <div>
                       <p className="text-sm font-extrabold text-[#171411]">{line.name}</p>
                       <p className="text-xs text-[#7a7268]">
-                        {line.line} · {line.withFrame ? "with frame" : "without frame"} · {formatInr(line.unitPrice)}
+                        {line.line}
+                        {line.photoId ? "" : ` · ${line.withFrame ? "with frame" : "without frame"}`} ·{" "}
+                        {formatInr(line.unitPrice)}
                       </p>
                     </div>
                   </div>
@@ -673,13 +681,13 @@ function CheckoutDialog({ onClose }: { onClose: () => void }) {
               {FREE_SHIPPING ? (
                 <p className="mt-2 flex flex-wrap items-center gap-2 text-xs text-[#7a7268]">
                   <FreeShipping />
-                  on us, anywhere in India. Ships in {SHIPPING.days}.
+                  on us, anywhere in India. Ships in {shipDays}{hasCustom ? " (custom puzzles are printed to order)" : ""}.
                 </p>
               ) : SHIPPING.flatFee != null ? (
-                <p className="mt-2 text-xs text-[#7a7268]">Ships with Delhivery in {SHIPPING.days}.</p>
+                <p className="mt-2 text-xs text-[#7a7268]">Ships with Delhivery in {shipDays}.</p>
               ) : (
                 <p className="mt-2 text-xs text-[#7a7268]">
-                  Delivery is Delhivery’s rate for your pin. Collected here, paid to Delhivery when we book. Ships in {SHIPPING.days}.
+                  Delivery is Delhivery’s rate for your pin. Collected here, paid to Delhivery when we book. Ships in {shipDays}.
                 </p>
               )}
             </dl>

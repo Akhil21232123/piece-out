@@ -13,6 +13,8 @@ export type CartLine = {
   unitPrice: number;
   qty: number;
   merchandiseId?: string;
+  /** Custom photo puzzle: uploaded photo id. Each photo is its own cart line. */
+  photoId?: string;
 };
 
 type AddPayload = {
@@ -23,6 +25,7 @@ type AddPayload = {
   withFrame: boolean;
   unitPrice?: number;
   merchandiseId?: string;
+  photoId?: string;
 };
 
 type CartState = {
@@ -37,7 +40,9 @@ export const useCartStore = create<CartState>((set) => ({
   lines: [],
   add: (item) =>
     set((state) => {
-      const id = `${item.productId}-${item.withFrame ? "frame" : "bare"}`;
+      const id = item.photoId
+        ? `${item.productId}-${item.photoId}`
+        : `${item.productId}-${item.withFrame ? "frame" : "bare"}`;
       const unitPrice = item.unitPrice ?? priceFor(item.withFrame);
       const existing = state.lines.find((line) => line.id === id);
       if (existing) {
@@ -67,6 +72,7 @@ export const useCartStore = create<CartState>((set) => ({
             unitPrice,
             qty: 1,
             merchandiseId: item.merchandiseId,
+            photoId: item.photoId,
           },
         ],
       };

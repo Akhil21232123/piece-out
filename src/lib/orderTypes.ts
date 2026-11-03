@@ -5,6 +5,8 @@ export type OrderItem = {
   qty: number;
   unitPrice: number;
   merchandiseId?: string;
+  /** Custom photo puzzle: the customer's uploaded photo (download from /admin). */
+  photoId?: string;
 };
 
 export type OrderStatus = "pending" | "paid" | "failed";

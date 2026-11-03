@@ -374,9 +374,27 @@ export function AdminOrders({
 
                 <ul className="mt-4 space-y-1 text-sm font-extrabold text-[#171411]">
                   {order.items.map((item) => (
-                    <li key={`${order.id}-${item.productId}-${item.withFrame}`}>
+                    <li key={`${order.id}-${item.productId}-${item.withFrame}-${item.photoId ?? ""}`}>
                       {item.qty}× {item.name} · {item.withFrame ? "with frame" : "without frame"} ·{" "}
                       {formatInr(item.unitPrice)}
+                      {item.photoId ? (
+                        <span className="mt-1 flex flex-wrap gap-2">
+                          <a
+                            href={`/api/custom/photo/${item.photoId}?view=1`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="rounded-full border border-[#171411]/20 px-3 py-1 text-xs font-extrabold"
+                          >
+                            View photo
+                          </a>
+                          <a
+                            href={`/api/custom/photo/${item.photoId}`}
+                            className="rounded-full bg-[#171411] px-3 py-1 text-xs font-extrabold text-[#fffaf3]"
+                          >
+                            Download photo
+                          </a>
+                        </span>
+                      ) : null}
                     </li>
                   ))}
                 </ul>

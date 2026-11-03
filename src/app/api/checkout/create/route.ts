@@ -1,6 +1,15 @@
 import { NextResponse } from "next/server";
 import { randomInt } from "crypto";
-import { makeOrderId, parcelWeightG, payableOf, PUZZLE_REWARD, rewardPrice, SHIPPING } from "@/lib/brand";
+import {
+  CUSTOM_PUZZLE,
+  makeOrderId,
+  parcelWeightG,
+  payableOf,
+  PUZZLE_REWARD,
+  rewardPrice,
+  SHIPPING,
+} from "@/lib/brand";
+import { isPhotoId, linkPhotos, photoExists } from "@/lib/customPhotos";
 import {
   DROP_ID,
   inStockEditionsFrom,
@@ -18,7 +27,9 @@ import { loadCatalog } from "@/lib/shopifyCatalog";
 
 export const runtime = "nodejs";
 
-function isItem(value: unknown): value is Pick<OrderItem, "productId" | "withFrame" | "qty" | "merchandiseId"> {
+function isItem(
+  value: unknown,
+): value is Pick<OrderItem, "productId" | "withFrame" | "qty" | "merchandiseId" | "photoId"> {
   if (!value || typeof value !== "object") return false;
   const item = value as OrderItem;
   return (
@@ -88,6 +99,24 @@ export async function POST(request: Request) {
   const items: OrderItem[] = [];
   for (const item of rawItems) {
     const qty = Math.min(9, Math.max(1, Math.floor(item.qty)));
+    if (item.productId === CUSTOM_PUZZLE.id) {
+      // Custom photo puzzle: fixed A4, frame included, priced from CUSTOM_PUZZLE (never from the client).
+      if (!isPhotoId(item.photoId) || !(await photoExists(item.photoId))) {
+        return NextResponse.json(
+          { error: "Your custom photo didn't upload. Remove it from the bag and add it again." },
+          { status: 400 },
+        );
+      }
+      items.push({
+        productId: CUSTOM_PUZZLE.id,
+        name: CUSTOM_PUZZLE.name,
+        withFrame: true,
+        qty,
+        unitPrice: reward ? rewardPrice(CUSTOM_PUZZLE.price) : CUSTOM_PUZZLE.price,
+        photoId: item.photoId,
+      });
+      continue;
+    }
     if (item.productId === DROP_ID) {
       if (!editions.length) {
         return NextResponse.json({ error: "Mystery Puzzle is sold out." }, { status: 400 });
@@ -189,6 +218,10 @@ export async function POST(request: Request) {
 
   try {
     await saveOrder(order);
+    await linkPhotos(
+      items.map((item) => item.photoId ?? "").filter(Boolean),
+      order.id,
+    );
   } catch (error) {
     const message = error instanceof Error ? error.message : "Could not start checkout.";
     return NextResponse.json({ error: message }, { status: 502 });
