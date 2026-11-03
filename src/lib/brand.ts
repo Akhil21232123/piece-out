@@ -26,6 +26,16 @@ export const SHIPPING = {
 
 export const FREE_SHIPPING = SHIPPING.flatFee === 0;
 
+/** Custom photo puzzle (/custom): fixed size, frame always included, own price. */
+export const CUSTOM_PUZZLE = {
+  id: "po-custom",
+  name: "Custom Photo Puzzle",
+  line: "A4 · free frame",
+  price: 999,
+  compare: 1299,
+  size: "A4 · 21 × 29.7 cm",
+} as const;
+
 /** Finish the puzzle on /play → this % off every can at checkout (one order). */
 export const PUZZLE_REWARD = { code: "SOLVED5", percent: 5 } as const;
 

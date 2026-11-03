@@ -545,13 +545,37 @@ export function cookieMatches(value: string): boolean {
   return timingSafeEqual(a, b);
 }
 
+function siteUrl(): string {
+  return (process.env.SITE_URL?.trim() || "https://www.pieceout.shop").replace(/\/$/, "");
+}
+
 function itemsText(order: ShopOrder): string {
   return order.items
     .map(
       (item) =>
-        `${item.qty}× ${item.name} (${item.withFrame ? "framed" : "no frame"}) · ₹${item.unitPrice}`,
+        `${item.qty}× ${item.name} (${item.withFrame ? "framed" : "no frame"}) · ₹${item.unitPrice}` +
+        (item.photoId ? `\n   Photo: ${siteUrl()}/api/custom/photo/${item.photoId} (log in to /admin first)` : ""),
     )
     .join("\n");
+}
+
+/** Custom-puzzle photos as Resend attachments (Resend allows up to 40 MB per email). */
+async function photoAttachments(order: ShopOrder): Promise<Array<{ filename: string; content: string }>> {
+  const ids = order.items.map((item) => item.photoId).filter((id): id is string => Boolean(id));
+  if (!ids.length) return [];
+  const { getPhoto } = await import("./customPhotos");
+  const out: Array<{ filename: string; content: string }> = [];
+  for (const id of ids) {
+    try {
+      const photo = await getPhoto(id);
+      if (!photo) continue;
+      const ext = photo.mime === "image/png" ? "png" : photo.mime === "image/webp" ? "webp" : "jpg";
+      out.push({ filename: `${order.id}-${photo.orientation}-${id}.${ext}`, content: photo.bytes.toString("base64") });
+    } catch (error) {
+      console.error("attach custom photo", order.id, id, error);
+    }
+  }
+  return out;
 }
 
 export async function emailOrder(order: ShopOrder) {
@@ -595,6 +619,7 @@ export async function emailOrder(order: ShopOrder) {
 
   const resendKey = process.env.RESEND_API_KEY;
   if (resendKey) {
+    const attachments = order.status === "paid" ? await photoAttachments(order) : [];
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -604,8 +629,9 @@ export async function emailOrder(order: ShopOrder) {
       body: JSON.stringify({
         from: "piece/out <orders@resend.dev>",
         to: [to],
-        subject: `piece/out ${order.id} · ${order.status} · ₹${order.total}`,
+        subject: `piece/out ${order.id} · ${order.status} · ₹${order.total}${attachments.length ? " · custom photo" : ""}`,
         text: body,
+        ...(attachments.length ? { attachments } : {}),
       }),
     });
     if (!res.ok) throw new Error(`Resend failed (${res.status})`);

@@ -348,6 +348,7 @@ function CheckoutDialog({ onClose }: { onClose: () => void }) {
             withFrame: line.withFrame,
             qty: line.qty,
             merchandiseId: line.merchandiseId,
+            photoId: line.photoId,
           })),
           promo: reward ? PUZZLE_REWARD.code : undefined,
         }),
@@ -547,7 +548,9 @@ function CheckoutDialog({ onClose }: { onClose: () => void }) {
                     <div>
                       <p className="text-sm font-extrabold text-[#171411]">{line.name}</p>
                       <p className="text-xs text-[#7a7268]">
-                        {line.line} · {line.withFrame ? "with frame" : "without frame"} · {formatInr(line.unitPrice)}
+                        {line.line}
+                        {line.photoId ? "" : ` · ${line.withFrame ? "with frame" : "without frame"}`} ·{" "}
+                        {formatInr(line.unitPrice)}
                       </p>
                     </div>
                   </div>

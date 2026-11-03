@@ -39,6 +39,13 @@ export function Nav({ onCheckout }: { onCheckout: () => void }) {
           <button type="button" onClick={() => go("shop")} className="transition hover:text-[#171411]">
             products
           </button>
+          <Link
+            href="/custom"
+            aria-current={path === "/custom" ? "page" : undefined}
+            className={`transition hover:text-[#171411] ${path === "/custom" ? "font-extrabold text-[#171411]" : ""}`}
+          >
+            customised
+          </Link>
           {!onPlay ? (
             <Link href="/play" className="transition hover:text-[#171411]">
               play · <span className="font-extrabold text-[#e31b23]">{PUZZLE_REWARD.percent}% off</span>

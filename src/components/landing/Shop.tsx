@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -202,6 +203,12 @@ export function Shop() {
                 </button>
               );
             })}
+            <Link
+              href="/custom"
+              className="shrink-0 rounded-full border border-[#e31b23]/40 bg-[#fffaf3] px-4 py-2 text-sm font-extrabold text-[#e31b23] transition hover:border-[#e31b23] hover:bg-[#e31b23] hover:text-[#fffaf3]"
+            >
+              Customised ✦
+            </Link>
           </div>
         </div>
         <div
