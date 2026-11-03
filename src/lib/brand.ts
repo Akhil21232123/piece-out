@@ -34,6 +34,8 @@ export const CUSTOM_PUZZLE = {
   price: 999,
   compare: 1299,
   size: "A4 · 21 × 29.7 cm",
+  /** Printed to order, so it takes longer than stock cans (SHIPPING.days). */
+  days: "7–10 days",
 } as const;
 
 /** Finish the puzzle on /play → this % off every can at checkout (one order). */

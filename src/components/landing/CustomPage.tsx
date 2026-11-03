@@ -25,7 +25,7 @@ const SOFT_LONG_EDGE = 1750;
 
 const STEPS = [
   { n: "01", title: "send your photo", note: "a face, a trip, your dog, your people." },
-  { n: "02", title: "we print it", note: `${BRAND.pieces} pieces, ${CUSTOM_PUZZLE.size}, packed in the can.` },
+  { n: "02", title: "we print it", note: `${BRAND.pieces} pieces, ${CUSTOM_PUZZLE.size}, packed in the can. ships in ${CUSTOM_PUZZLE.days}.` },
   { n: "03", title: "pop, build, hang", note: "the frame is in the box. on us." },
 ] as const;
 
@@ -210,6 +210,9 @@ export function CustomPage() {
                 </span>
                 {FREE_SHIPPING ? <FreeShipping /> : null}
               </div>
+              <p className="mt-3 text-sm font-semibold text-[#5e574e]">
+                Printed to order · ships in {CUSTOM_PUZZLE.days}
+              </p>
             </div>
 
             <div className="lg:col-start-2 lg:row-span-2 lg:row-start-1">
