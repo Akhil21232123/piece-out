@@ -29,6 +29,8 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
       id: order.id,
       status: order.status,
       total: order.total,
+      // Product ids + qty only (no names/addresses): the /thank-you page sends these to the Meta Pixel.
+      items: order.status === "paid" ? order.items.map((item) => ({ productId: item.productId, qty: item.qty })) : [],
       confirming: Boolean(order.utr) && order.status === "pending",
       failureReason: order.failureReason ?? "",
     },
