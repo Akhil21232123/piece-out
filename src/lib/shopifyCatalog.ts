@@ -1,4 +1,13 @@
-import { CATEGORIES, DROP_ID, MYSTERY, placeMystery, SHOP, type CategoryId, type Product } from "@/data/products";
+import {
+  CATEGORIES,
+  DROP_ID,
+  isProductSoldOut,
+  MYSTERY,
+  placeMystery,
+  SHOP,
+  type CategoryId,
+  type Product,
+} from "@/data/products";
 import { compareFor, priceFor } from "@/lib/brand";
 import {
   adminGraphql,
@@ -329,7 +338,30 @@ export async function ensureShopifyReady(force = false): Promise<void> {
   ensureAt = Date.now();
 }
 
+/**
+ * Hidden stock → "sold out". Only the flag reaches the browser, never the count.
+ * Products without a stock row (e.g. Cherry Pick, F1 Speed) keep their code soldOut flag.
+ */
+async function withStock(products: Product[]): Promise<Product[]> {
+  const { stockMap } = await import("./inventory");
+  const stock = await stockMap();
+  if (!stock.size) return products;
+  const next = products.map((product) =>
+    product.id !== DROP_ID && (stock.get(product.id) ?? 1) <= 0 ? { ...product, soldOut: true } : product,
+  );
+  const editions = next.filter((product) => product.id !== DROP_ID);
+  const allGone = editions.length === 0 || editions.every((product) => isProductSoldOut(product));
+  return next.map((product) =>
+    product.id === DROP_ID ? { ...product, soldOut: Boolean(product.soldOut) || allGone } : product,
+  );
+}
+
 export async function loadCatalog(force = false): Promise<{ shopify: boolean; products: Product[] }> {
+  const base = await loadBaseCatalog(force);
+  return { shopify: base.shopify, products: await withStock(base.products) };
+}
+
+async function loadBaseCatalog(force = false): Promise<{ shopify: boolean; products: Product[] }> {
   if (!force && catalogCache && Date.now() - catalogCache.at < CATALOG_TTL) {
     return { shopify: catalogCache.shopify, products: catalogCache.products };
   }

@@ -10,6 +10,7 @@ import {
   SHIPPING,
 } from "@/lib/brand";
 import { isPhotoId, linkPhotos, photoExists } from "@/lib/customPhotos";
+import { stockMap } from "@/lib/inventory";
 import {
   DROP_ID,
   inStockEditionsFrom,
@@ -96,6 +97,15 @@ export async function POST(request: Request) {
   const { products } = await loadCatalog();
   const catalog = new Map(products.map((product) => [product.id, product]));
   const editions = inStockEditionsFrom(products);
+  // Hidden stock: never sell more cans than we have. Untracked products (no stock row) are not limited.
+  const left = new Map(await stockMap());
+  const take = (productId: string, n: number) => {
+    const have = left.get(productId);
+    if (have == null) return true;
+    if (have < n) return false;
+    left.set(productId, have - n);
+    return true;
+  };
   const items: OrderItem[] = [];
   for (const item of rawItems) {
     const qty = Math.min(9, Math.max(1, Math.floor(item.qty)));
@@ -122,7 +132,12 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Mystery Puzzle is sold out." }, { status: 400 });
       }
       for (let n = 0; n < qty; n++) {
-        const assigned = assignEdition(editions);
+        const pool = editions.filter((edition) => (left.get(edition.id) ?? 1) > 0);
+        if (!pool.length) {
+          return NextResponse.json({ error: "Mystery Puzzle is sold out." }, { status: 400 });
+        }
+        const assigned = assignEdition(pool);
+        take(assigned.id, 1);
         const existing = items.find(
           (line) => line.productId === assigned.id && line.withFrame === item.withFrame,
         );
@@ -139,6 +154,12 @@ export async function POST(request: Request) {
     if (isProductSoldOut(product)) {
       return NextResponse.json(
         { error: `${product.name} is sold out.` },
+        { status: 400 },
+      );
+    }
+    if (!take(product.id, qty)) {
+      return NextResponse.json(
+        { error: `We can't send ${qty} × ${product.name} right now. Try fewer.` },
         { status: 400 },
       );
     }
