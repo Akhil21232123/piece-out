@@ -228,6 +228,8 @@ export async function setStock(productId: string, qty: number): Promise<StockRow
     }
   }
   cache = null;
+  // A newly counted can may have paid orders since the baseline waiting for it: catch up now.
+  caughtUp = false;
   return listStock(true);
 }
 
