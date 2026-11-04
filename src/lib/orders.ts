@@ -578,6 +578,28 @@ async function photoAttachments(order: ShopOrder): Promise<Array<{ filename: str
   return out;
 }
 
+/** Plain email to the shop inbox (ORDER_EMAIL) — Resend if configured, else FormSubmit. */
+export async function emailInbox(subject: string, text: string) {
+  const to = inboxEmail();
+  if (!to) return;
+  const resendKey = process.env.RESEND_API_KEY;
+  if (resendKey) {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ from: "piece/out <orders@resend.dev>", to: [to], subject, text }),
+    });
+    if (!res.ok) throw new Error(`Resend failed (${res.status})`);
+    return;
+  }
+  const res = await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(to)}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json", "User-Agent": "piece-out-orders" },
+    body: JSON.stringify({ _subject: subject, _template: "box", _captcha: "false", message: text }),
+  });
+  if (!res.ok) throw new Error(`Email send failed (${res.status})`);
+}
+
 export async function emailOrder(order: ShopOrder) {
   const to = inboxEmail();
   if (!to) return;

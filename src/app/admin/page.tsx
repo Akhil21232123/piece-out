@@ -4,6 +4,7 @@ import { listInsights } from "@/lib/insights";
 import { adminPassword, cookieMatches, durableStoreConfigured, inboxEmail, listOrders } from "@/lib/orders";
 import { importShopifyOrders } from "@/lib/shopifyOrders";
 import { loadCatalog } from "@/lib/shopifyCatalog";
+import { stockView } from "@/lib/inventory";
 import {
   shopifyAdminConfigured,
   shopifyStoreDomain,
@@ -16,6 +17,7 @@ import { AdminLogin } from "./AdminLogin";
 import { AdminOrders } from "./AdminOrders";
 import { AdminShopify } from "./AdminShopify";
 import { AdminSignOut } from "./AdminSignOut";
+import { AdminStock } from "./AdminStock";
 
 export const metadata = {
   title: "Orders — piece/out",
@@ -42,11 +44,12 @@ export default async function AdminPage() {
     }
   }
 
-  const [orders, alerts, days, catalog] = await Promise.all([
+  const [orders, alerts, days, catalog, stock] = await Promise.all([
     listOrders(),
     listRestockAlerts(),
     listInsights(7),
     loadCatalog(),
+    stockView().catch(() => []),
   ]);
   const inbox = inboxEmail();
   const durableStore = durableStoreConfigured();
@@ -73,6 +76,7 @@ export default async function AdminPage() {
       </p>
       <AdminInsights initial={days} />
       <AdminShopify initial={shopify} />
+      <AdminStock initial={stock} />
       <AdminAlerts initial={alerts} />
       <AdminOrders orders={orders} durableStore={durableStore} inbox={inbox} />
     </main>
