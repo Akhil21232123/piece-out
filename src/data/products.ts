@@ -102,6 +102,18 @@ export const PRODUCTS: Product[] = [
     isNew: true,
   },
   {
+    id: "po-27",
+    name: "Absolut",
+    line: "The original. pieced.",
+    story:
+      "A vintage ad, a perfect pour, and the bottle everyone recognises from across the bar. For the ones who host the pre-game, keep the good glasses, and know a classic when they see one. Mix one, piece it together, hang it where the party starts.",
+    image: "/products/absolut-vodka.jpg",
+    width: 1024,
+    height: 1024,
+    category: "more",
+    isNew: true,
+  },
+  {
     id: "po-01",
     name: "Diet Coke",
     line: "Pop art edition.",

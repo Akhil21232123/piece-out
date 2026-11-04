@@ -11,6 +11,11 @@ const BRAND: ProductTheme = {
 };
 
 export const PRODUCT_THEMES: Record<string, ProductTheme> = {
+  "po-27": {
+    paper: "#f2e6d6",
+    stroke: "rgba(107,25,21,0.22)",
+    pieces: ["#a3201b", "#efe2c8", "#251e1a", "#1f3a68", "#fffaf3"],
+  },
   "po-21": {
     paper: "#f6e6ec",
     stroke: "rgba(120,48,58,0.2)",
