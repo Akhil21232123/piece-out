@@ -1,4 +1,5 @@
 import type { ShopOrder } from "./orderTypes";
+import { emailCustomer } from "./customerEmail";
 import { emailInbox, emailOrder } from "./orders";
 import { bookShipmentIfNeeded } from "./shipping";
 import { createShopifyPaidOrder } from "./shopifyPush";
@@ -43,5 +44,10 @@ export async function notifyPaid(previous: ShopOrder, next: ShopOrder | null) {
     await emailOrder(current);
   } catch {
     /* dashboard still updates */
+  }
+  try {
+    await emailCustomer(current);
+  } catch (err) {
+    console.error("customer email", current.id, err);
   }
 }

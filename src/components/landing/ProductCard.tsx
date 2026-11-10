@@ -45,7 +45,8 @@ export function ProductCard({
   const addBtnRef = useRef<HTMLButtonElement>(null);
   const sheenRef = useRef<HTMLSpanElement>(null);
   const stampRef = useRef<HTMLSpanElement>(null);
-  const [withFrame, setWithFrame] = useState(false);
+  // Framed is what most buyers pick (about 4 in 5 cans sold online), so start there.
+  const [withFrame, setWithFrame] = useState(true);
   const [added, setAdded] = useState(false);
   const [broken, setBroken] = useState(false);
   const [peelOn, setPeelOn] = useState(false);
