@@ -139,11 +139,32 @@ export function HowItWorks() {
           <p data-how-in className="font-hand mt-4 text-[1.7rem] leading-none text-[#9b2242] md:text-3xl">
             no box. one hour. then hang it.
           </p>
-          <p data-how-in className="mt-5 max-w-md text-[1.05rem] leading-relaxed text-[#5e574e]">
+          {/* Phones: show the product before any more words. Most visitors arrive from an ad
+              and leave within seconds if the first screen is text only. Desktop is unchanged. */}
+          <button
+            type="button"
+            onClick={goShop}
+            data-how-in
+            aria-label="See the puzzles"
+            className="relative mt-5 block aspect-[16/10] w-full overflow-hidden rounded-[1.25rem] bg-[#ece6da] shadow-[0_14px_36px_rgb(23_20_17_/_0.16)] lg:hidden"
+          >
+            <Image
+              src="/products/fuji-garden.jpg"
+              alt="A piece/out can next to the finished, framed puzzle"
+              fill
+              priority
+              sizes="(max-width: 1023px) 100vw, 1px"
+              className="object-cover"
+            />
+            <span className="absolute bottom-3 left-3 rounded-full bg-[#171411]/85 px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.14em] text-[#fffaf3]">
+              {BRAND.pieces} pieces · about an hour
+            </span>
+          </button>
+          <p data-how-in className="mt-5 hidden max-w-md text-[1.05rem] leading-relaxed text-[#5e574e] lg:block">
             Premium puzzles in a can. Peel the lid, snap the frame, lock 150 pieces, hang it.
             Grab an edition — or the Mystery Puzzle.
           </p>
-          <div data-how-in className="mt-8 flex flex-wrap items-center gap-3">
+          <div data-how-in className="mt-5 flex flex-wrap items-center gap-3 lg:mt-8">
             <button
               type="button"
               onClick={goShop}
