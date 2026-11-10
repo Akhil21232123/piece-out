@@ -11,13 +11,13 @@ import {
   shopifyStorefrontConfigured,
   shopifyWebhookSecret,
 } from "@/lib/shopify";
-import { AdminAlerts } from "./AdminAlerts";
 import { AdminInsights } from "./AdminInsights";
 import { AdminLogin } from "./AdminLogin";
 import { AdminOrders } from "./AdminOrders";
 import { AdminShopify } from "./AdminShopify";
 import { AdminSignOut } from "./AdminSignOut";
 import { AdminStock } from "./AdminStock";
+import { AdminTabs } from "./AdminTabs";
 
 export const metadata = {
   title: "Orders — piece/out",
@@ -71,13 +71,13 @@ export default async function AdminPage() {
         </div>
         <AdminSignOut />
       </div>
-      <p className="mt-2 text-sm text-[#7a7268]">
+      <AdminTabs active="orders" pings={alerts.length} />
+      <p className="mt-4 text-sm text-[#7a7268]">
         Customers pay on Razorpay. Shopify keeps the catalog, stock, and a copy of each paid order.
       </p>
       <AdminInsights initial={days} />
       <AdminShopify initial={shopify} />
       <AdminStock initial={stock} />
-      <AdminAlerts initial={alerts} />
       <AdminOrders orders={orders} durableStore={durableStore} inbox={inbox} />
     </main>
   );
