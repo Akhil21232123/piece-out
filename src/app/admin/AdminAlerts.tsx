@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { RestockAlert } from "@/lib/alerts";
 
 function waHref(phone: string) {
@@ -17,6 +17,13 @@ function when(value?: string) {
 
 export function AdminAlerts({ initial = [] }: { initial?: RestockAlert[] }) {
   const [rows, setRows] = useState<RestockAlert[]>(initial);
+  const [only, setOnly] = useState<string>("");
+  const counts = useMemo(() => {
+    const m = new Map<string, number>();
+    rows.forEach((row) => m.set(row.productName, (m.get(row.productName) ?? 0) + 1));
+    return [...m.entries()].sort((a, b) => b[1] - a[1]);
+  }, [rows]);
+  const shown = only ? rows.filter((row) => row.productName === only) : rows;
 
   const pull = async () => {
     const res = await fetch("/api/notify", { cache: "no-store" });
@@ -32,18 +39,43 @@ export function AdminAlerts({ initial = [] }: { initial?: RestockAlert[] }) {
   }, []);
 
   return (
-    <section className="mt-10">
-      <h2 className="text-2xl font-extrabold tracking-tight text-[#171411]">restock pings</h2>
-      <p className="mt-1 text-sm text-[#7a7268]">
-        People who asked to be told when a sold-out can is back. {rows.length} waiting.
+    <section className="mt-6">
+      <p className="text-sm text-[#7a7268]">
+        People who asked to be told when a sold-out can is back. {rows.length} waiting. Message them
+        on WhatsApp when it&apos;s restocked.
       </p>
+      {counts.length > 1 ? (
+        <div className="mt-4 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => setOnly("")}
+            className={`rounded-full px-3 py-1.5 text-xs font-extrabold ${
+              !only ? "bg-[#171411] text-[#fffaf3]" : "border border-[#171411]/16 bg-[#fffaf3] text-[#171411]"
+            }`}
+          >
+            All · {rows.length}
+          </button>
+          {counts.map(([name, n]) => (
+            <button
+              key={name}
+              type="button"
+              onClick={() => setOnly(name === only ? "" : name)}
+              className={`rounded-full px-3 py-1.5 text-xs font-extrabold ${
+                only === name ? "bg-[#171411] text-[#fffaf3]" : "border border-[#171411]/16 bg-[#fffaf3] text-[#171411]"
+              }`}
+            >
+              {name} · {n}
+            </button>
+          ))}
+        </div>
+      ) : null}
       {!rows.length ? (
         <p className="mt-4 rounded-[1.2rem] border border-[#171411]/10 bg-[#fffaf3] p-5 text-sm text-[#7a7268]">
           No restock pings yet. Sold-out shop cards now collect name and number.
         </p>
       ) : (
         <ul className="mt-4 space-y-3">
-          {rows.map((row) => {
+          {shown.map((row) => {
             const wa = waHref(row.phone);
             return (
               <li key={row.id} className="rounded-[1.2rem] border border-[#171411]/10 bg-[#fffaf3] p-4">
