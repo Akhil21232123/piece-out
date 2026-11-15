@@ -158,3 +158,29 @@ export async function syncTracking(): Promise<{ checked: number; shipped: number
   }
   return { checked: watch.length, shipped, delivered };
 }
+
+/**
+ * After switching to a different Delhivery account (new DELHIVERY_API_TOKEN), waybills from
+ * the old account are useless. Drop them and book fresh ones on the current account.
+ * Only for orders that haven't left yet.
+ */
+export async function rebook(ids: string[]) {
+  const [orders, ful] = await Promise.all([listOrders(), listFulfillment()]);
+  const chosen = orders.filter((o) => ids.includes(o.id) && o.status === "paid" && stillToShip(ful.get(o.id)?.state));
+  let booked = 0;
+  const failed: string[] = [];
+  for (const order of chosen) {
+    const cleared = await updateOrder(order.id, {
+      awb: "",
+      trackingUrl: "",
+      shiprocketOrderId: "",
+      shiprocketShipmentId: "",
+      shippingError: "",
+    });
+    const next = await bookShipmentIfNeeded(cleared ?? { ...order, awb: "" });
+    if (next.awb) booked += 1;
+    else failed.push(`${order.id}: ${next.shippingError || "no waybill"}`);
+    await setFulfillment(order.id, { state: "ready", courierStatus: "" });
+  }
+  return { booked, failed };
+}

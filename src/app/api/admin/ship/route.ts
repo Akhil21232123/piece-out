@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { adminPassword, cookieMatches } from "@/lib/orders";
-import { markReady, markSentOther, pickupFor, shipBoard, syncTracking } from "@/lib/shipFlow";
+import { markReady, markSentOther, pickupFor, rebook, shipBoard, syncTracking } from "@/lib/shipFlow";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -36,6 +36,7 @@ export async function POST(request: Request) {
       for (const id of ids) await markReady(id);
       return NextResponse.json({ ok: true, ...(await shipBoard()) });
     }
+    if (body.action === "rebook") return NextResponse.json({ ok: true, rebook: await rebook(ids), ...(await shipBoard()) });
     if (body.action === "sync") return NextResponse.json({ ok: true, sync: await syncTracking(), ...(await shipBoard()) });
     return NextResponse.json({ error: "Unknown action." }, { status: 400 });
   } catch (error) {
