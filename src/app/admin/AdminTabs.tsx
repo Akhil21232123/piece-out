@@ -1,15 +1,16 @@
 import Link from "next/link";
 
-type Tab = "orders" | "pings";
+type Tab = "orders" | "ship" | "pings";
 
 /** Tab bar shared by /admin (orders) and /admin/pings (restock pings). */
-export function AdminTabs({ active, pings }: { active: Tab; pings?: number }) {
+export function AdminTabs({ active, pings, ship }: { active: Tab; pings?: number; ship?: number }) {
   const tabs: { id: Tab; href: string; label: string; badge?: number }[] = [
     { id: "orders", href: "/admin", label: "Orders" },
+    { id: "ship", href: "/admin/ship", label: "Ship", badge: ship },
     { id: "pings", href: "/admin/pings", label: "Restock pings", badge: pings },
   ];
   return (
-    <nav aria-label="Admin sections" className="mt-6 flex gap-2">
+    <nav aria-label="Admin sections" className="mt-6 flex flex-wrap gap-2">
       {tabs.map((tab) => {
         const on = tab.id === active;
         return (

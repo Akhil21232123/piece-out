@@ -5,6 +5,7 @@ import { adminPassword, cookieMatches, durableStoreConfigured, inboxEmail, listO
 import { importShopifyOrders } from "@/lib/shopifyOrders";
 import { loadCatalog } from "@/lib/shopifyCatalog";
 import { stockView } from "@/lib/inventory";
+import { listFulfillment, stillToShip } from "@/lib/fulfillment";
 import {
   shopifyAdminConfigured,
   shopifyStoreDomain,
@@ -44,13 +45,15 @@ export default async function AdminPage() {
     }
   }
 
-  const [orders, alerts, days, catalog, stock] = await Promise.all([
+  const [orders, alerts, days, catalog, stock, ful] = await Promise.all([
     listOrders(),
     listRestockAlerts(),
     listInsights(7),
     loadCatalog(),
     stockView().catch(() => []),
+    listFulfillment(),
   ]);
+  const toShip = orders.filter((o) => o.status === "paid" && stillToShip(ful.get(o.id)?.state)).length;
   const inbox = inboxEmail();
   const durableStore = durableStoreConfigured();
   const shopify = {
@@ -71,7 +74,7 @@ export default async function AdminPage() {
         </div>
         <AdminSignOut />
       </div>
-      <AdminTabs active="orders" pings={alerts.length} />
+      <AdminTabs active="orders" pings={alerts.length} ship={toShip} />
       <p className="mt-4 text-sm text-[#7a7268]">
         Customers pay on Razorpay. Shopify keeps the catalog, stock, and a copy of each paid order.
       </p>

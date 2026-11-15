@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { adminPassword, cookieMatches } from "@/lib/orders";
 import { reconcileOrders } from "@/lib/reconcile";
+import { syncTracking } from "@/lib/shipFlow";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,7 +22,9 @@ export async function GET(request: Request) {
   }
   try {
     const result = await reconcileOrders(true);
-    return NextResponse.json({ ok: true, ...result });
+    // Second daily look at Delhivery (the other is the 7 pm IST cron on /api/admin/ship).
+    const tracking = await syncTracking().catch(() => null);
+    return NextResponse.json({ ok: true, ...result, tracking });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Reconcile failed.";
     return NextResponse.json({ error: message }, { status: 502 });
