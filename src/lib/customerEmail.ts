@@ -133,3 +133,69 @@ export async function emailCustomer(order: ShopOrder): Promise<boolean> {
   if (!res.ok) throw new Error(`Customer email failed (${res.status})`);
   return true;
 }
+
+/** "It's on the way" email, sent once when Delhivery first scans the parcel. */
+export function buildShippedEmail(order: ShopOrder, trackUrl: string) {
+  const first = (order.name || "").trim().split(/\s+/)[0] || "there";
+  const reply = process.env.ORDER_EMAIL || "";
+  const items = order.items.map((item) => `${item.qty} × ${item.name}${item.withFrame ? " · with frame" : ""}`);
+  const subject = `Your piece/out order is on the way · ${order.id}`;
+  const text = [
+    `Hi ${first},`,
+    "",
+    "Your order just left us and is with Delhivery now.",
+    "",
+    ...items,
+    "",
+    `Track it: ${trackUrl}`,
+    order.awb ? `Delhivery tracking number: ${order.awb}` : "",
+    "",
+    "Most parcels arrive in 3–5 days.",
+    reply ? "Anything wrong? Just reply to this email." : "",
+    "",
+    "piece/out",
+  ]
+    .filter((line, i, all) => !(line === "" && all[i - 1] === ""))
+    .join("\n");
+
+  const html = `<!doctype html><html><body style="margin:0;background:#f3ede2;font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#171411">
+<div style="max-width:520px;margin:0 auto;padding:28px 20px">
+  <p style="margin:0;font-size:22px;font-weight:800;letter-spacing:-0.03em">piece/out</p>
+  <div style="margin-top:18px;background:#fffaf3;border-radius:18px;padding:24px">
+    <p style="margin:0;font-size:11px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#e31b23">on the way</p>
+    <p style="margin:8px 0 0;font-size:26px;font-weight:800;letter-spacing:-0.03em;line-height:1.05">it's shipped, ${esc(first)}.</p>
+    <p style="margin:12px 0 0;font-size:15px;line-height:1.5;color:#5e574e">Your order ${esc(order.id)} is with Delhivery now. Most parcels arrive in 3–5 days.</p>
+    <p style="margin:14px 0 0;font-size:14px;line-height:1.6">${items.map(esc).join("<br>")}</p>
+    <p style="margin:22px 0 0"><a href="${esc(trackUrl)}" style="display:inline-block;background:#e31b23;color:#ffffff;text-decoration:none;font-weight:800;font-size:14px;padding:13px 22px;border-radius:999px">Track your order</a></p>
+    ${order.awb ? `<p style="margin:12px 0 0;font-size:12px;color:#7a7268">Delhivery tracking number: ${esc(order.awb)}</p>` : ""}
+  </div>
+  <p style="margin:18px 4px 0;font-size:13px;color:#7a7268">${reply ? "Something wrong? Just reply to this email." : ""}</p>
+</div></body></html>`;
+  return { subject, text, html, replyTo: reply };
+}
+
+export async function emailShipped(order: ShopOrder, trackUrl: string): Promise<boolean> {
+  const to = (order.email || "").trim();
+  const key = process.env.RESEND_API_KEY;
+  const from = process.env.EMAIL_FROM;
+  if (!looksLikeEmail(to) || !key || !from || !trackUrl) return false;
+  const mail = buildShippedEmail(order, trackUrl);
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${key}`,
+      "Content-Type": "application/json",
+      "Idempotency-Key": `order-shipped-${order.id}`,
+    },
+    body: JSON.stringify({
+      from,
+      to: [to],
+      subject: mail.subject,
+      text: mail.text,
+      html: mail.html,
+      ...(mail.replyTo ? { reply_to: mail.replyTo } : {}),
+    }),
+  });
+  if (!res.ok) throw new Error(`Shipped email failed (${res.status})`);
+  return true;
+}

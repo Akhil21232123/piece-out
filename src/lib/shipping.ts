@@ -294,7 +294,13 @@ export function trackingUrlFor(partner: string, awb: string): string {
   if (key.includes("india post") || key.includes("indiapost") || key.includes("speed post")) {
     return `https://www.indiapost.gov.in/_layouts/15/dop.portal.tracking/trackconsignment.aspx`;
   }
-  return `https://www.delhivery.com/track/package/${encodeURIComponent(code)}`;
+  // Delhivery's public tracking URLs keep changing (the old /track/package/ link now 404s),
+  // so customers get our own page, which asks Delhivery's API directly.
+  return `${siteBase()}/track/${encodeURIComponent(code)}`;
+}
+
+function siteBase(): string {
+  return (process.env.SITE_URL?.trim() || "https://www.pieceout.shop").replace(/\/$/, "");
 }
 
 export function resolveCourier(label?: string): string {
@@ -306,7 +312,14 @@ export function resolveCourier(label?: string): string {
   return hit?.label ?? raw;
 }
 
-export function shippingPatch(order: Partial<ShopOrder> & { awb?: string }): Partial<ShopOrder> {
+/**
+ * markShipped: true when a person typed in a tracking number for a parcel that has really
+ * left (manual courier). Auto-booked Delhivery waybills pass false: a label is not a pickup.
+ */
+export function shippingPatch(
+  order: Partial<ShopOrder> & { awb?: string },
+  markShipped = true,
+): Partial<ShopOrder> {
   const awb = order.awb?.trim().replace(/\s+/g, "").toUpperCase() || "";
   const partner = resolveCourier(order.shippingPartner);
   return {
@@ -315,7 +328,7 @@ export function shippingPatch(order: Partial<ShopOrder> & { awb?: string }): Par
     trackingUrl: awb
       ? trackingUrlFor(partner, awb) || order.trackingUrl || ""
       : order.trackingUrl || "",
-    shippedAt: order.shippedAt || (awb ? new Date().toISOString() : undefined),
+    shippedAt: order.shippedAt || (awb && markShipped ? new Date().toISOString() : undefined),
     shiprocketOrderId: order.shiprocketOrderId,
     shiprocketShipmentId: order.shiprocketShipmentId,
     shippingError: order.shippingError ?? "",
@@ -426,8 +439,10 @@ function nextPickupSlot() {
   return { date: new Date().toISOString().slice(0, 10), time: "11:00:00" };
 }
 
-async function requestPickup(): Promise<void> {
+/** Ask Delhivery to collect `count` parcels from our pickup location at the next slot. */
+export async function requestPickup(count: number): Promise<{ date: string; time: string }> {
   const slot = nextPickupSlot();
+  const parcels = Math.max(1, Math.round(count));
   const res = await dlvFetch("/fm/request/new/", {
     method: "POST",
     headers: authHeaders(true),
@@ -436,7 +451,8 @@ async function requestPickup(): Promise<void> {
       pickup_time: slot.time,
       pickup_date: slot.date,
       pickup_location: pickupName(),
-      expected_package_count: 1,
+      expected_package_count: parcels,
+      expected_package_quantity: parcels,
     }),
   });
   if (!res.ok) {
@@ -449,6 +465,7 @@ async function requestPickup(): Promise<void> {
       data.error || data.prepaid || data.pickup_location || `Pickup request failed (${res.status})`,
     );
   }
+  return slot;
 }
 
 export async function saveTracking(
@@ -492,9 +509,9 @@ async function persistAwb(order: ShopOrder, awb: string, refnum?: string): Promi
       shiprocketShipmentId: awb,
       trackingUrl: trackingUrlFor("Delhivery", awb),
       shippingError: "",
-    }),
+    }, false),
   );
-  await requestPickup().catch(() => undefined);
+  // No pickup request here any more: one request per shipping day, from /admin/ship.
   return next ?? { ...order, awb };
 }
 
@@ -604,4 +621,132 @@ export async function retryUnshipped(orders: ShopOrder[]): Promise<number> {
     if (next.awb) booked += 1;
   }
   return booked;
+}
+
+/* ───────────── labels, tracking, cancel (used by /admin/ship) ───────────── */
+
+/**
+ * One PDF with every label, ready to print. Delhivery's packing_slip endpoint returns either
+ * the PDF itself or JSON with a pdf_download_link per waybill, depending on account settings,
+ * so both are handled and the pages are merged in order.
+ */
+export async function labelsPdf(awbs: string[]): Promise<Uint8Array> {
+  const list = [...new Set(awbs.map((a) => a.trim()).filter(Boolean))];
+  if (!list.length) throw new Error("No labels to print.");
+  if (!shippingConfigured()) throw new Error("Delhivery is not set up on Vercel.");
+  const { PDFDocument } = await import("pdf-lib");
+  const merged = await PDFDocument.create();
+
+  const addPdf = async (bytes: ArrayBuffer) => {
+    const doc = await PDFDocument.load(bytes);
+    const pages = await merged.copyPages(doc, doc.getPageIndices());
+    pages.forEach((page) => merged.addPage(page));
+  };
+
+  for (let i = 0; i < list.length; i += 25) {
+    const chunk = list.slice(i, i + 25).join(",");
+    const res = await dlvFetch(`/api/p/packing_slip?wbns=${encodeURIComponent(chunk)}&pdf=true`, {
+      headers: authHeaders(),
+      timeoutMs: 20000,
+    });
+    if (!res.ok) throw new Error(`Delhivery labels failed (${res.status})`);
+    const type = res.headers.get("content-type") ?? "";
+    if (type.includes("pdf")) {
+      await addPdf(await res.arrayBuffer());
+      continue;
+    }
+    const data = (await res.json().catch(() => ({}))) as {
+      packages?: Array<{ wbn?: string; pdf_download_link?: string }>;
+      pdf_download_link?: string;
+    };
+    const links = [
+      ...(data.pdf_download_link ? [data.pdf_download_link] : []),
+      ...(data.packages ?? []).map((p) => p.pdf_download_link ?? "").filter(Boolean),
+    ];
+    if (!links.length) throw new Error("Delhivery returned no label PDF. Check the waybills are still active.");
+    for (const link of links) {
+      const file = await fetch(link, { cache: "no-store" });
+      if (!file.ok) throw new Error(`Could not download a label (${file.status})`);
+      await addPdf(await file.arrayBuffer());
+    }
+  }
+  if (!merged.getPageCount()) throw new Error("No label pages came back from Delhivery.");
+  return merged.save();
+}
+
+export type TrackInfo = {
+  awb: string;
+  status: string;
+  /** Delhivery has physically scanned the parcel (it left us). */
+  pickedUp: boolean;
+  delivered: boolean;
+  returning: boolean;
+  at?: string;
+  location?: string;
+  pickedUpAt?: string;
+  scans: { at: string; place: string; text: string }[];
+};
+
+const NOT_YET = /^(manifested|not picked|pickup scheduled|open|pending pickup|cancelled)$/i;
+
+function parseShipment(raw: Record<string, unknown>): TrackInfo | null {
+  const awb = String(raw.AWB ?? raw.Waybill ?? "").trim();
+  if (!awb) return null;
+  // Official API: Status is an object; some accounts/SDKs flatten it to a string.
+  const st = raw.Status as Record<string, unknown> | string | undefined;
+  const status = String((typeof st === "object" ? st?.Status : st) ?? "").trim();
+  const type = String((typeof st === "object" ? st?.StatusType : "") ?? "").toUpperCase();
+  const at = String((typeof st === "object" ? st?.StatusDateTime : raw["Status DateTime"]) ?? "") || undefined;
+  const location = String((typeof st === "object" ? st?.StatusLocation : "") ?? "") || undefined;
+  const pickedUpAt = String(raw.PickUpDate ?? raw["Pickup Date"] ?? "") || undefined;
+  const scansRaw = (raw.Scans as Array<Record<string, unknown>> | undefined) ?? [];
+  const scans = scansRaw
+    .map((s) => {
+      const d = (s.ScanDetail as Record<string, unknown> | undefined) ?? s;
+      return {
+        at: String(d.ScanDateTime ?? d["SL Date"] ?? ""),
+        place: String(d.ScannedLocation ?? d.Location ?? d.City ?? ""),
+        text: String(d.Instructions ?? d.Scan ?? ""),
+      };
+    })
+    .filter((s) => s.at || s.text);
+  const delivered = type === "DL" || /^delivered$/i.test(status);
+  const returning = type === "RT" || /rto|return/i.test(status);
+  const pickedUp = delivered || returning || Boolean(pickedUpAt) || (status !== "" && !NOT_YET.test(status));
+  return { awb, status, pickedUp, delivered, returning, at, location, pickedUpAt, scans };
+}
+
+/** Live status for many waybills (asked 10 at a time). Unknown waybills are left out. */
+export async function trackWaybills(awbs: string[]): Promise<Map<string, TrackInfo>> {
+  const out = new Map<string, TrackInfo>();
+  const list = [...new Set(awbs.map((a) => a.trim()).filter(Boolean))];
+  if (!list.length || !shippingConfigured()) return out;
+  for (let i = 0; i < list.length; i += 10) {
+    const chunk = list.slice(i, i + 10).join(",");
+    const res = await dlvFetch(`/api/v1/packages/json/?waybill=${encodeURIComponent(chunk)}`, {
+      headers: authHeaders(),
+      timeoutMs: 10000,
+    }).catch(() => null);
+    if (!res?.ok) continue;
+    const data = (await res.json().catch(() => ({}))) as {
+      ShipmentData?: Array<{ Shipment?: Record<string, unknown> }>;
+    };
+    for (const row of data.ShipmentData ?? []) {
+      const info = row.Shipment ? parseShipment(row.Shipment) : null;
+      if (info) out.set(info.awb, info);
+    }
+  }
+  return out;
+}
+
+/** Cancel waybills that will never be handed to Delhivery (sent another way). */
+export async function cancelWaybills(awbs: string[]): Promise<void> {
+  for (const awb of awbs.filter(Boolean)) {
+    await dlvFetch("/api/p/edit", {
+      method: "POST",
+      headers: authHeaders(true),
+      timeoutMs: 8000,
+      body: JSON.stringify({ waybill: awb, cancellation: "true" }),
+    }).catch(() => undefined);
+  }
 }
