@@ -36,7 +36,10 @@ export function buildCustomerEmail(order: ShopOrder) {
   const where = [order.address, [order.city, order.state].filter(Boolean).join(", "), order.pincode]
     .filter(Boolean)
     .join("\n");
-  const track = order.trackingUrl || "";
+  // Never show tracking here. This mail goes out at payment time, when the courier hasn't
+  // scanned anything yet, so an auto-booked waybill would be a link that finds nothing.
+  // Tracking belongs in a separate "shipped" mail once the parcel is actually picked up.
+  const track = "";
 
   const subject = `Order confirmed · ${order.id} · piece/out`;
 
