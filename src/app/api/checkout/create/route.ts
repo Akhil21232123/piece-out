@@ -25,6 +25,7 @@ import { addressLooksComplete, isPincode, normalizePincode } from "@/lib/pincode
 import { createRazorpayOrder, razorpayConfigured, razorpayKeyId } from "@/lib/razorpay";
 import { quoteDelhiveryCharge, resolveShipTo } from "@/lib/shipping";
 import { loadCatalog } from "@/lib/shopifyCatalog";
+import { ordersPaused } from "@/lib/siteSettings";
 
 export const runtime = "nodejs";
 
@@ -69,6 +70,12 @@ function lineOf(
 }
 
 export async function POST(request: Request) {
+  if (await ordersPaused()) {
+    return NextResponse.json(
+      { error: "We're taking a short break and not taking orders right now. Please check back soon." },
+      { status: 503 },
+    );
+  }
   let body: unknown;
   try {
     body = await request.json();

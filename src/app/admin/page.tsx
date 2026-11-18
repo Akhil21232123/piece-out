@@ -19,6 +19,8 @@ import { AdminShopify } from "./AdminShopify";
 import { AdminSignOut } from "./AdminSignOut";
 import { AdminStock } from "./AdminStock";
 import { AdminTabs } from "./AdminTabs";
+import { AdminPause } from "./AdminPause";
+import { ordersPaused } from "@/lib/siteSettings";
 
 export const metadata = {
   title: "Orders — piece/out",
@@ -75,6 +77,7 @@ export default async function AdminPage() {
         <AdminSignOut />
       </div>
       <AdminTabs active="orders" pings={alerts.length} ship={toShip} />
+      <AdminPause initial={await ordersPaused()} />
       <p className="mt-4 text-sm text-[#7a7268]">
         Customers pay on Razorpay. Shopify keeps the catalog, stock, and a copy of each paid order.
       </p>

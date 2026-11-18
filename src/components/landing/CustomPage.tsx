@@ -5,6 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { Nav } from "@/components/landing/Nav";
 import { CartBar } from "@/components/landing/CartBar";
+import { PausedBanner } from "@/components/landing/PausedBanner";
+import { useOrdersPaused } from "@/store/siteStatus";
 import { CheckoutModal } from "@/components/landing/CheckoutModal";
 import { Footer } from "@/components/landing/Chrome";
 import { PuzzleField } from "@/components/landing/PuzzleField";
@@ -95,6 +97,7 @@ export function CustomPage() {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const count = useCartStore((state) => cartCount(state.lines));
   const add = useCartStore((state) => state.add);
+  const paused = useOrdersPaused();
   const inputRef = useRef<HTMLInputElement>(null);
   const [picked, setPicked] = useState<Picked | null>(null);
   const [orientation, setOrientation] = useState<Orientation>("portrait");
@@ -110,8 +113,8 @@ export function CustomPage() {
 
   const closeCheckout = useCallback(() => setCheckoutOpen(false), []);
   const openCheckout = useCallback(() => {
-    if (cartCount(useCartStore.getState().lines) > 0) setCheckoutOpen(true);
-  }, []);
+    if (!paused && cartCount(useCartStore.getState().lines) > 0) setCheckoutOpen(true);
+  }, [paused]);
 
   const onPick = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -183,6 +186,7 @@ export function CustomPage() {
     <main className={`relative min-h-dvh overflow-x-hidden bg-transparent text-[#171411] ${count > 0 ? "pb-36" : ""}`}>
       <div className="paper-drift" aria-hidden />
       <PuzzleField />
+      <PausedBanner />
       <div className="relative z-10 isolate">
         <Nav onCheckout={openCheckout} />
         <section className="relative overflow-x-clip px-4 pb-16 pt-24 md:px-8 md:pb-28 md:pt-32">
@@ -310,10 +314,12 @@ export function CustomPage() {
                   <button
                     type="button"
                     onClick={picked ? addToBag : () => inputRef.current?.click()}
-                    disabled={stage === "working"}
+                    disabled={stage === "working" || paused}
                     className="mt-4 min-h-12 w-full rounded-full bg-[#171411] py-3 text-sm font-extrabold text-[#fffaf3] transition hover:bg-[#e31b23] disabled:opacity-70"
                   >
-                    {stage === "working"
+                    {paused
+                      ? "Orders paused"
+                      : stage === "working"
                       ? "Uploading your photo…"
                       : picked
                         ? `Add to cart · ${formatInr(CUSTOM_PUZZLE.price)}`
@@ -350,7 +356,7 @@ export function CustomPage() {
         </section>
         <Footer />
       </div>
-      <CartBar onCheckout={openCheckout} hidden={checkoutOpen} />
+      <CartBar onCheckout={openCheckout} hidden={checkoutOpen || paused} />
       <CheckoutModal open={checkoutOpen} onClose={closeCheckout} />
     </main>
   );
