@@ -1,5 +1,7 @@
 "use client";
 
+import { useOrdersPaused } from "@/store/siteStatus";
+
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
@@ -127,7 +129,9 @@ function StoryDialog({
     { scope: reelRef, dependencies: [shot] },
   );
 
+  const ordersOff = useOrdersPaused();
   const addToCart = () => {
+    if (ordersOff) return;
     if (soldOut) return;
     add({
       productId: product.id,
@@ -295,7 +299,8 @@ function StoryDialog({
                 ref={addBtnRef}
                 type="button"
                 onClick={soldOut ? () => onNotify(product) : addToCart}
-                className={`min-h-12 rounded-full py-3 text-sm font-extrabold ${
+                disabled={ordersOff && !soldOut}
+                className={`min-h-12 rounded-full py-3 text-sm font-extrabold disabled:cursor-not-allowed disabled:opacity-50 ${
                   soldOut
                     ? "bg-[#e31b23] text-white hover:bg-[#171411]"
                     : added
@@ -303,7 +308,9 @@ function StoryDialog({
                       : "bg-[#171411] text-[#fffaf3] hover:bg-[#e31b23]"
                 }`}
               >
-                {soldOut
+                {ordersOff && !soldOut
+                ? "Orders paused"
+                : soldOut
                   ? "Notify me"
                   : added
                     ? "Added"

@@ -1,5 +1,7 @@
 "use client";
 
+import { useOrdersPaused } from "@/store/siteStatus";
+
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import gsap from "gsap";
@@ -241,7 +243,9 @@ export function ProductCard({
   }, [product.livePuzzle]);
   void slot;
 
+  const paused = useOrdersPaused();
   const addToCart = () => {
+    if (paused) return;
     if (soldOut) return;
     add({
       productId: product.id,
@@ -385,7 +389,8 @@ export function ProductCard({
           ref={addBtnRef}
           type="button"
           onClick={soldOut ? onNotify : addToCart}
-          className={`mt-auto min-h-12 w-full rounded-full py-3 text-sm font-extrabold transition ${
+          disabled={paused && !soldOut}
+          className={`mt-auto min-h-12 w-full rounded-full py-3 text-sm font-extrabold transition disabled:cursor-not-allowed disabled:opacity-50 ${
             soldOut
               ? "bg-[#e31b23] text-white hover:bg-[#171411]"
               : added
@@ -393,7 +398,9 @@ export function ProductCard({
                 : "bg-[#171411] text-[#fffaf3] hover:bg-[#e31b23]"
           }`}
         >
-          {soldOut
+          {paused && !soldOut
+                ? "Orders paused"
+                : soldOut
             ? "Notify me"
             : added
               ? "Added"
